@@ -192,14 +192,14 @@ UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 
 CREATE OR REPLACE FUNCTION SOIPL.verification_login(VARCHAR,VARCHAR) RETURNS INTEGER AS $$
 DECLARE 
-	reussit INTEGER;
+	reussi INTEGER;
 	_login ALIAS FOR $1;
 	_mot_de_passe ALIAS FOR $2;
 BEGIN	
 	SELECT COALESCE(count(u.id_utilisateur),0) FROM SOIPL.utilisateurs u
 	WHERE u.mot_de_passe = _mot_de_passe AND u.nom_utilisateur = _login AND u.desactive = false
-	INTO reussit;
-	RETURN reussit;
+	INTO reussi;
+	RETURN reussi;
 END;
 $$ LANGUAGE 'plpgsql';
 
