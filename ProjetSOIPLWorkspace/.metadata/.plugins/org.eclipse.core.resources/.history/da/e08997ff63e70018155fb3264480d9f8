@@ -1,0 +1,98 @@
+package utilisateur;
+import java.util.Scanner;
+
+public class Utilisateur {
+	
+	public static void main(String args[]) {
+		connexionUtilisateur();
+		menuAvecChoix();
+	}
+	
+	public static void menuAvecChoix() {
+		System.out.println("----------------------------------------------");
+		System.out.println("|           Que voulez-vous faire ?          |");
+		System.out.println("----------------------------------------------");
+		System.out.println("|1. Introduire une nouvelle question.        |");
+		System.out.println("|2. Visualiser les questions posées.         |");
+		System.out.println("|3. Visualiser les questions repondues.      |");
+		System.out.println("|4. Visualiser toutes les questions.         |");
+		System.out.println("|5. Visualiser les questions d'un tag.       |");
+		System.out.println("----------------------------------------------");
+		Scanner scanner = new Scanner(System.in);
+		int choix = 0;
+		do {
+			System.out.print("Veuillez rentrer votre choix : ");
+			choix = scanner.nextInt();
+		}while(!(choix > 0 && choix < 6));
+		
+		switch(choix) {
+			case 1:
+				introduireNouvelleQuestion();
+				break;
+			case 2:
+				visualiserQuestionsPosees();
+				break;
+			case 3:
+				visualiserQuestionsRepondues();
+				break;
+			case 4:
+				toutesLesQuestions();
+				break;
+			case 5:
+				visualiserQuestionsAvecTag(); 
+				break;
+		}
+	}
+	
+	public static boolean connexionUtilisateur() {
+		Scanner scannerCo = new Scanner(System.in);
+		System.out.println("Etes-vous deja inscrit ? (O/N)");
+		String caract = scannerCo.nextLine();
+		if("O".equals(caract)) {
+			System.out.print("Veuillez entrer votre identifiant : ");
+			String login = scannerCo.nextLine();
+			System.out.print("Veuillez entrer votre mot de passe : ");
+			String password = scannerCo.nextLine();
+			//TODO le false a changé et verification dans la db
+			boolean valeurDeRetour = false; 
+			if(valeurDeRetour == true) {
+				
+			}else {
+				
+			}
+		}else{
+			System.out.print("Veuillez entrer votre email : ");
+			String email = scannerCo.nextLine();
+			System.out.print("Veuillez entrer votre identifiant : ");
+			String login = scannerCo.nextLine();
+			System.out.print("Veuillez entrer votre mot de passe : ");
+			String password = scannerCo.nextLine();
+		}
+		return true;
+	}
+	
+	public static void introduireNouvelleQuestion() {
+		System.out.println("Introduire une nouvelle question");
+		menuAvecChoix();
+	}
+	
+	public static void visualiserQuestionsPosees() {
+		System.out.println("Affichage de toutes les Questions Posees");
+		menuAvecChoix();
+	}
+	
+	public static void toutesLesQuestions() {
+		System.out.println("Affichage de toutes les questions");
+		menuAvecChoix();
+	}
+	
+	public static void visualiserQuestionsRepondues() {
+		System.out.println("Affichage de toutes les questions répondues");
+		menuAvecChoix();
+	}
+	
+	public static void visualiserQuestionsAvecTag() {
+		System.out.println("Affichage de toutes les questions avec tag specifique");
+		menuAvecChoix();
+	}
+}

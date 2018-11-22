@@ -1,0 +1,2 @@
+GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
+(GRANT USAGE ON SCHEMA dblbokiau17 TO rhonore16;) -- entre parentheses donc a voir
