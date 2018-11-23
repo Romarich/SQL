@@ -1,0 +1,16 @@
+package main;
+
+import utilisateur.Utilisateur;
+
+public class main {
+
+	
+	
+	public static void main(String args[]) {
+		Utilisateur utilisateur = new Utilisateur();
+		utilisateur.connexionUtilisateur();
+		utilisateur.menuAvecChoix();
+	}
+	
+	
+}
