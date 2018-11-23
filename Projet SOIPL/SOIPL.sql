@@ -309,6 +309,11 @@ $$ LANGUAGE 'plpgsql';
 CREATE VIEW SOIPL.view_toutes_questions_titre AS
 SELECT titre, date_creation, id_question, utilisateur_createur, date_derniere_edition, utilisateur_edition FROM SOIPL.questions ORDER BY date_creation;
 
+CREATE VIEW SOIPL.selection_questions_posees_par_utilisateur(id_utilisateur) AS
+SELECT titre, utilisateur_createur, date_creation, utilisateur_edition, date_derniere_edition FROM SOIPL.questions WHERE id_utilisateur = utilisateur_createur AND cloture = false ORDER BY date_creation;
+
+CREATE VIEW SOIPL.selection_reponses_sur_questions_posees(id_question_selectionnee) AS
+SELECT id_reponse_par_question, id_utilisateur, score, texte, date_heure FROM SOIPL.reponses WHERE id_question = id_question_selectionnee ORDER BY date_heure; -- date_heure ou alors par id_reponse_par_question
 
 /*LES MODIFICATIONS*/
 
