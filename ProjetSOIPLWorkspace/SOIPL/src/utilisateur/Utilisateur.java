@@ -11,9 +11,12 @@ public class Utilisateur {
 	public static Connection connection = connexionDB();
 	private static int utilisateur;
 	private static Scanner scanner = new Scanner(System.in);
-	//TODO Changer nom de la classe
-	//TODO mettre le main dans une autre classe qui permet de lancer le main
-	// avec que tres peu de methodes donc par exemple
+	
+	//TODO CHanger le nom de la classe et sortit le main du truc
+	//TODO le main permet de lancer que quelques methodes par exemple la connexion de l'utilisateur, le program en lui meme et
+	// les prepare statements
+	// le scanner devra juste entre close apres le menu quand on utilise une touche pour quitter le programme
+	// donc pas dans le main
 	public static void main(String args[]) {
 		connexionUtilisateur();
 		menuAvecChoix();
@@ -99,31 +102,24 @@ public class Utilisateur {
 			String password = scanner.nextLine();
 			password = BCrypt.hashpw(password, BCrypt.gensalt());
 			try {
-				PreparedStatement ps = connection.prepareStatement("INSERT INTO" + " SOIPL.utilisateurs VALUES (DEFAULT, ?, ?, ?, DEFAULT, DEFAULT, DEFAULT);" );
-				ps.setString(1,login);
-				ps.setString(2,password);
-				ps.setString(3,email);
-				ps.executeUpdate();
-				/* ICI avec procedure mais bug soit avec return et la ça me dit qu'il ne faut pas de return aussi non pas de return et il en faut un
-				 * 
-				 * PreparedStatement ps = connection.prepareStatement("SELECT inscription_utilisateur(?, ?, ?)");
+				PreparedStatement ps = connection.prepareStatement("SELECT inscription_utilisateur(?, ?, ?)");
+				ps.setString(1,email);
 				ps.setString(2,login);
 				ps.setString(3,password);
-				ps.setString(1,email);
-				ps.executeUpdate();	*/
+				ps.executeQuery();
 			}catch (SQLException se) {
-				System.out.println("Erreur lors de l’insertion !");
-				se.printStackTrace();
-				System.exit(1); 
+				//TODO (à completer)
+				System.out.println("Erreur lors de l’insertion ! Essayer une autre adresse mail, ou un autre nom d'utilisateur");
+				connexionUtilisateur();
 			}
 			try {
 				 PreparedStatement ps = connection
-		                    .prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ?");
+		                    .prepareStatement("SELECT selection_id_utilisateur_avec_nom_utilisateur(?)");
 		            ps.setString(1, login);
 		            ResultSet rs = ps.executeQuery();
-		            while (rs.next()) {
-		                utilisateur = rs.getInt(1);
-		            }
+		            rs.next();
+		            utilisateur = rs.getInt(1);
+
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
@@ -145,12 +141,11 @@ public class Utilisateur {
 			corpQuestion = scanner.nextLine();
 		}
 		try {
-			PreparedStatement ps = connection.prepareStatement("INSERT INTO" + " SOIPL.questions VALUES (DEFAULT, ?, ?, DEFAULT, DEFAULT, ?, ?, DEFAULT);" );
+			PreparedStatement ps = connection.prepareStatement("SELECT creation_nouvelle_question(?,?,?);" );
 			ps.setInt(1,utilisateur);
-			ps.setTimestamp(2,getCurrentTimeStamp());
+			ps.setString(2,corpQuestion);
 			ps.setString(3,titre);
-			ps.setString(4,corpQuestion);
-			ps.executeUpdate();	
+			ps.executeQuery();	
 		}catch (SQLException se) {
 			System.out.println("Erreur lors de l’insertion !");
 			se.printStackTrace();
@@ -205,11 +200,7 @@ public class Utilisateur {
 		System.out.println("Affichage de toutes les questions avec tag specifique");
 		menuAvecChoix();
 	}
-	
-	private static java.sql.Timestamp getCurrentTimeStamp() {
 
-		java.util.Date today = new java.util.Date();
-		return new java.sql.Timestamp(today.getTime());
-
-	}
 }
+
+
