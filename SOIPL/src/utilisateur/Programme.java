@@ -165,6 +165,20 @@ public class Programme {
 		}catch(SQLException se) {
 			
 		}
+		System.out.println("Quel question souhaitez voir en detail ?");
+		int choixVisualisationQuestionSpecifique= scanner.nextInt();
+		try {
+			PreparedStatement ps = connection.prepareStatement("SELECT * FROM SOIPL.reponses WHERE id_question = ?");
+			ps.setInt(1, choixVisualisationQuestionSpecifique);
+			ResultSet rs = ps.executeQuery();
+			int i = 0;
+			while(rs.next()){
+				i++;
+				System.out.println(i + " " + rs.getString(0));
+			}
+		}catch(SQLException se) {
+			
+		}
 		menuAvecChoix();
 	}
 	
@@ -176,7 +190,6 @@ public class Programme {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 System.out.println(rs.getString(1) + ". " + rs.getString(7));
-                
             }
             rs.close();
             ps.close();
@@ -184,6 +197,22 @@ public class Programme {
         } catch (Exception e) {
             e.printStackTrace();
         }
+		//TODO soucis au niveau de l'affichage voir pk
+		System.out.println("Quel question souhaitez voir en detail ?");
+		int choixVisualisationQuestionSpecifique= scanner.nextInt();
+		try {
+			PreparedStatement ps1 = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE id_question = ?");
+			ps1.setInt(1, choixVisualisationQuestionSpecifique);
+			ResultSet rs1 = ps1.executeQuery();
+			int i = 0;
+			System.out.println(rs1.getString(1));
+			while(rs1.next()){
+				i++;
+				System.out.println(i + " " + rs1.getString(1) + " " + rs1.getString(2) + " " + rs1.getString(3));
+			}
+		}catch(SQLException se) {
+			
+		}
 		
 		menuAvecChoix();
 	}
