@@ -1,5 +1,17 @@
 ﻿--TODO : GRANT
 --TODO : TRIGGER
+--TODO :
+-- ╔ ajout tag questions (insert)                       
+-- ╠ selection questions posées ou répondues (query)    ┐
+-- ╠ selection toutes les questions (query)             ├ afficher date, num, utilisateur, date edit, util edit, titre
+-- ╠ selection question liée à un tag (query)           ┘
+-- ╠ selection d'une question parmi celles affichées (par num ?) + affichage réponses triées (num date auteur score contenu)
+-- ╠══╦ répondre (max 200 char)
+-- ║  ╠ voter
+-- ║  ╠ editer question ou reponse
+-- ║  ╠ ajout tag
+-- ║  ╠ cloturer question 
+-- ║  ╠ 
 
 DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
