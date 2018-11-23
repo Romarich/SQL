@@ -59,7 +59,7 @@ CREATE TABLE SOIPL.utilisateurs(
 	id_utilisateur SERIAL PRIMARY KEY,
 	nom_utilisateur VARCHAR(100) NOT NULL CHECK(nom_utilisateur<>'') UNIQUE,
 	mot_de_passe VARCHAR(100) NOT NULL CHECK(mot_de_passe<>''),
-	email VARCHAR(100) NOT NULL CHECK(email<>'') UNIQUE,
+	email VARCHAR(100) NOT NULL CHECK(email<>'' AND  email like '%_@__%.__%') UNIQUE,
 	statut CHAR(6) REFERENCES SOIPL.statuts(nom_statut) NOT NULL DEFAULT 'normal',
 	reputation INTEGER NOT NULL DEFAULT 0 CHECK(reputation>=0),
 	desactive BOOLEAN NOT NULL DEFAULT FALSE
