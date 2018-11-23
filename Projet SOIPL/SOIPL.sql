@@ -306,6 +306,9 @@ $$ LANGUAGE 'plpgsql';
 -- voir comment return une liste
 -- ou alors faite un return view ?? ou return records
 
+CREATE VIEW SOIPL.view_toutes_questions_titre AS
+SELECT titre, date_creation, id_question, utilisateur_createur, date_derniere_edition, utilisateur_edition FROM SOIPL.questions ORDER BY date_creation;
+
 
 /*LES MODIFICATIONS*/
 
