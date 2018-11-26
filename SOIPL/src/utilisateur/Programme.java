@@ -11,13 +11,27 @@ public class Programme {
 	public Connection connection;
 	private int utilisateur;
 	private static Scanner scanner = new Scanner(System.in);
+	private PreparedStatement psSelectionUtilisateurDejaPresent;
+	private PreparedStatement psInscriptionNouvelUtil;
+	private PreparedStatement psSelectionDeLUtilisateurEnCours;
+	private PreparedStatement psIntroductionNouvelleQuestion;
+	private PreparedStatement psVisualiserQuestionsPosees;
+	private PreparedStatement psVisualiserQuestionsPoseesSpecifiqueId;
+	private PreparedStatement psVisualiserToutesLesQuestions;
 	
-	//TODO le main permet de lancer que quelques methodes par exemple la connexion de l'utilisateur, le program en lui meme et
-	// les prepare statements
-	// le scanner devra juste entre close apres le menu quand on utilise une touche pour quitter le programme
-	// donc pas dans le main
-	public Programme() {
-		this.connection = connexionDB();
+	public Programme(){
+		this.connection = connexionDB();	
+		try {
+			this.psSelectionUtilisateurDejaPresent = connection.prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ?");
+			this.psInscriptionNouvelUtil = connection.prepareStatement("SELECT inscription_utilisateur(?, ?, ?)");
+			this.psSelectionDeLUtilisateurEnCours = connection.prepareStatement("SELECT selection_id_utilisateur_avec_nom_utilisateur(?)");
+			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT creation_nouvelle_question(?,?,?);" );
+			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
+			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT * FROM SOIPL.reponses WHERE id_question = ?");
+			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void menuAvecChoix() {
@@ -29,13 +43,14 @@ public class Programme {
 		System.out.println("|3. Visualiser les questions repondues.      |");
 		System.out.println("|4. Visualiser toutes les questions.         |");
 		System.out.println("|5. Visualiser les questions d'un tag.       |");
+		System.out.println("|6. Eteindre le programme.                   |");
 		System.out.println("----------------------------------------------");
 		int choix = 0;
 		
 		do {
 			System.out.print("Veuillez rentrer votre choix : ");
 			choix = scanner.nextInt();
-		}while(!(choix > 0 && choix < 6));
+		}while(!(choix > 0 && choix < 7));
 		
 		switch(choix) {
 			case 1:
@@ -52,6 +67,9 @@ public class Programme {
 				break;
 			case 5:
 				visualiserQuestionsAvecTag(); 
+				break;
+			case 6:
+				fermerLeProgramme();
 				break;
 		}
 	}
@@ -70,23 +88,18 @@ public class Programme {
 			System.out.print("Veuillez entrer votre mot de passe : ");
 			String password = scanner.nextLine();
 			try {
-	            PreparedStatement ps = connection
-	                    .prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ?");
-	            ps.setString(1, login);
-	            ResultSet rs = ps.executeQuery();
+				psSelectionUtilisateurDejaPresent.setString(1, login);
+	            ResultSet rs = psSelectionUtilisateurDejaPresent.executeQuery();
 	            boolean ok = false;
 	            while (rs.next()) {
 	                utilisateur = rs.getInt(1);
 	                ok = BCrypt.checkpw(password, rs.getString(2));
-	                
 	            }
 	            if(!ok) {
 	            	System.out.println("Mot de passe incorrect");
 	            	connexionUtilisateur();
 	            }
 	            rs.close();
-	            ps.close();
-
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
@@ -99,24 +112,20 @@ public class Programme {
 			String password = scanner.nextLine();
 			password = BCrypt.hashpw(password, BCrypt.gensalt());
 			try {
-				PreparedStatement ps = connection.prepareStatement("SELECT inscription_utilisateur(?, ?, ?)");
-				ps.setString(1,email);
-				ps.setString(2,login);
-				ps.setString(3,password);
-				ps.executeQuery();
+				psInscriptionNouvelUtil.setString(1,email);
+				psInscriptionNouvelUtil.setString(2,login);
+				psInscriptionNouvelUtil.setString(3,password);
+				psInscriptionNouvelUtil.executeQuery();
 			}catch (SQLException se) {
 				//TODO (à completer)
 				System.out.println("Erreur lors de l’insertion ! Essayer une autre adresse mail, ou un autre nom d'utilisateur");
 				connexionUtilisateur();
 			}
-			try {
-				 PreparedStatement ps = connection
-		                    .prepareStatement("SELECT selection_id_utilisateur_avec_nom_utilisateur(?)");
-		            ps.setString(1, login);
-		            ResultSet rs = ps.executeQuery();
-		            rs.next();
-		            utilisateur = rs.getInt(1);
-
+			try {				 
+				psSelectionDeLUtilisateurEnCours.setString(1, login);
+		        ResultSet rs = psSelectionDeLUtilisateurEnCours.executeQuery();
+		        rs.next();
+		        utilisateur = rs.getInt(1);
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
@@ -138,11 +147,10 @@ public class Programme {
 			corpQuestion = scanner.nextLine();
 		}
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT creation_nouvelle_question(?,?,?);" );
-			ps.setInt(1,utilisateur);
-			ps.setString(2,corpQuestion);
-			ps.setString(3,titre);
-			ps.executeQuery();	
+			psIntroductionNouvelleQuestion.setInt(1,utilisateur);
+			psIntroductionNouvelleQuestion.setString(2,corpQuestion);
+			psIntroductionNouvelleQuestion.setString(3,titre);
+			psIntroductionNouvelleQuestion.executeQuery();	
 		}catch (SQLException se) {
 			System.out.println("Erreur lors de l’insertion !");
 			se.printStackTrace();
@@ -152,25 +160,24 @@ public class Programme {
 	}
 	
 	public void visualiserQuestionsPosees() {
-		System.out.println("Affichage de toutes les Questions Posees");
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
-			ps.setInt(1, utilisateur);
-			ResultSet rs = ps.executeQuery();
+			
+			psVisualiserQuestionsPosees.setInt(1, utilisateur);
+			ResultSet rs = psVisualiserQuestionsPosees.executeQuery();
 			int i = 0;
 			while(rs.next()){
 				i++;
 				System.out.println(i + " " + rs.getString(0));
 			}
 		}catch(SQLException se) {
-			
+			System.out.println("Vous n'avez pas encore posé de questions");
+			menuAvecChoix();
 		}
 		System.out.println("Quel question souhaitez voir en detail ?");
 		int choixVisualisationQuestionSpecifique= scanner.nextInt();
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT * FROM SOIPL.reponses WHERE id_question = ?");
-			ps.setInt(1, choixVisualisationQuestionSpecifique);
-			ResultSet rs = ps.executeQuery();
+			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
+			ResultSet rs = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
 			int i = 0;
 			while(rs.next()){
 				i++;
@@ -185,25 +192,21 @@ public class Programme {
 	public void toutesLesQuestions() {
 		System.out.println("Affichage de toutes les questions");
 		try {
-            PreparedStatement ps = connection
-                    .prepareStatement("SELECT * FROM SOIPL.questions");
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = psVisualiserToutesLesQuestions.executeQuery();
             while (rs.next()) {
                 System.out.println(rs.getString(1) + ". " + rs.getString(7));
             }
             rs.close();
-            ps.close();
-
         } catch (Exception e) {
-            e.printStackTrace();
+        	System.out.println("Vous n'avez pas encore posé de questions");
+			menuAvecChoix();
         }
 		//TODO soucis au niveau de l'affichage voir pk
 		System.out.println("Quel question souhaitez voir en detail ?");
 		int choixVisualisationQuestionSpecifique= scanner.nextInt();
 		try {
-			PreparedStatement ps1 = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE id_question = ?");
-			ps1.setInt(1, choixVisualisationQuestionSpecifique);
-			ResultSet rs1 = ps1.executeQuery();
+			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
+			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
 			int i = 0;
 			System.out.println(rs1.getString(1));
 			while(rs1.next()){
@@ -213,7 +216,6 @@ public class Programme {
 		}catch(SQLException se) {
 			
 		}
-		
 		menuAvecChoix();
 	}
 	
@@ -226,7 +228,23 @@ public class Programme {
 		System.out.println("Affichage de toutes les questions avec tag specifique");
 		menuAvecChoix();
 	}
-
+	
+	public void fermerLeProgramme(){
+		try {
+			psSelectionUtilisateurDejaPresent.close();
+			psInscriptionNouvelUtil.close();
+			psSelectionDeLUtilisateurEnCours.close();
+			psIntroductionNouvelleQuestion.close();
+			psVisualiserQuestionsPosees.close();
+			psVisualiserQuestionsPoseesSpecifiqueId.close();
+			psVisualiserToutesLesQuestions.close();
+			scanner.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Au revoir et à bientôt");
+		System.exit(0);
+	}
 }
 
 

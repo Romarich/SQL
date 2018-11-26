@@ -9,6 +9,4 @@ public class StackOverflowIPL {
 		programme.connexionUtilisateur();
 		programme.menuAvecChoix();
 	}
-	
-	
 }
