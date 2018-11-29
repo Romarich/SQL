@@ -47,7 +47,7 @@ CREATE SCHEMA SOIPL;
 -- est-ce que ça doit etre le plus opti possible ou alors on peut metre un id pour ici la table status meme s’il y a 3 donnees
 CREATE TABLE SOIPL.statuts(
 	nom_statut VARCHAR(6) CHECK (nom_statut LIKE 'normal' OR nom_statut LIKE 'avancé' OR nom_statut LIKE 'master') PRIMARY KEY,
-	seuil INTEGER NOT NULL CHECK (seuil>=0 AND seuil<=100)
+	seuil INTEGER NOT NULL CHECK (seuil>=0 AND seuil<=100) UNIQUE
 );
 
 CREATE TABLE SOIPL.tags(
