@@ -3,6 +3,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import source.BCrypt;
@@ -18,6 +19,7 @@ public class Programme {
 	private PreparedStatement psVisualiserQuestionsPosees;
 	private PreparedStatement psVisualiserQuestionsPoseesSpecifiqueId;
 	private PreparedStatement psVisualiserToutesLesQuestions;
+	private PreparedStatement psVisualiserReponses;
 	
 	public Programme(){
 		this.connection = connexionDB();	
@@ -27,8 +29,9 @@ public class Programme {
 			this.psSelectionDeLUtilisateurEnCours = connection.prepareStatement("SELECT selection_id_utilisateur_avec_nom_utilisateur(?)");
 			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT creation_nouvelle_question(?,?,?);" );
 			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
-			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT * FROM SOIPL.reponses WHERE id_question = ?");
+			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT q.*, u.nom_utilisateur FROM SOIPL.questions q, SOIPL.utilisateurs u WHERE q.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions");
+			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -190,31 +193,61 @@ public class Programme {
 	
 	public void toutesLesQuestions() {
 		System.out.println("Affichage de toutes les questions");
+		ArrayList<Integer> ids = new ArrayList<Integer>();
 		try {
             ResultSet rs = psVisualiserToutesLesQuestions.executeQuery();
             while (rs.next()) {
                 System.out.println(rs.getString(1) + ". " + rs.getString(7));
+                ids.add(Integer.parseInt(rs.getString(1)));
             }
             rs.close();
         } catch (Exception e) {
         	System.out.println("Vous n'avez pas encore posé de questions");
 			menuAvecChoix();
         }
+		System.out.println("");
 		//TODO soucis au niveau de l'affichage voir pk
-		System.out.println("Quel question souhaitez voir en detail ?");
-		int choixVisualisationQuestionSpecifique= scanner.nextInt();
+		int choixVisualisationQuestionSpecifique;
+		do {
+			System.out.println("Quel question souhaitez voir en detail ?");
+			choixVisualisationQuestionSpecifique = scanner.nextInt();
+		}while(!ids.contains(choixVisualisationQuestionSpecifique));
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
-			int i = 0;
-			System.out.println(rs1.getString(1));
-			while(rs1.next()){
-				i++;
-				System.out.println(i + " " + rs1.getString(1) + " " + rs1.getString(2) + " " + rs1.getString(3));
+			while (rs1.next()) {
+            	System.out.println(rs1.getString(9));
+            	System.out.println(rs1.getString(1) + ", " + rs1.getString(7));
+                System.out.println("");
+                System.out.println(rs1.getString(6));
+                System.out.println("");
+                System.out.print(rs1.getString(3));
+                if(rs1.getString(4) != null) {
+                	System.out.println(", dernière edition :" + rs1.getString(4) + " par " + rs1.getString(5));
+                }else {
+                	System.out.println();
+                }
+                System.out.println("");
+            }
+		}catch(SQLException se) {
+			
+		}
+		try {
+			psVisualiserReponses.setInt(1, choixVisualisationQuestionSpecifique);
+			ResultSet rs1 = psVisualiserReponses.executeQuery();
+			while (rs1.next()) {
+            	System.out.println(rs1.getString(8) + " " + rs1.getString(1) + " " + rs1.getString(7) );
+                System.out.println("");
+                System.out.println(rs1.getString(5) + " : " + rs1.getString(6));
+                System.out.println("");
+                System.out.print(rs1.getString(3));
+                System.out.println("");
+                System.out.println("");
 			}
 		}catch(SQLException se) {
 			
 		}
+		
 		menuAvecChoix();
 	}
 	
