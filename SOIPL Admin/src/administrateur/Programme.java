@@ -31,7 +31,7 @@ public class Programme {
 		System.out.println("|           Que voulez-vous faire ?          |");
 		System.out.println("----------------------------------------------");
 		System.out.println("|1. Desactiver un compte.                    |");
-		System.out.println("|2. Augmentation forcée d'un compte.         |");
+		System.out.println("|2. Augmentation forcee d'un compte.         |");
 		System.out.println("|3. Ajouter un tag.                          |");
 		System.out.println("|4. Eteindre le programme.                   |");
 		System.out.println("----------------------------------------------");
