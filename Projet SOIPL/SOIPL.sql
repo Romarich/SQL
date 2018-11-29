@@ -18,10 +18,10 @@
 -- ╚ reputation augmente → possible changement statut
 
 --TODO : APPLICATION CENTRALE
--- ╔ desactiver compte (enlever connexion)
--- ╠ augmentation forcée de statut 
--- ╠ consulter hitorique utilisateur
--- ╚ ajouter tag.
+-- ╔ FAIT :: desactiver compte (enlever connexion)
+-- ╠ FAIT :: augmentation forcée de statut 
+-- ╠ consulter historique utilisateur     ---- ??
+-- ╚ FAIT :: ajouter tag.
 
 
 DROP SCHEMA IF EXISTS SOIPL CASCADE;
@@ -253,14 +253,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION SOIPL.creation_nouveau_tag(VARCHAR) RETURNS INTEGER AS $$
-DECLARE
-	_tag ALIAS FOR $1;
-BEGIN
-	INSERT INTO SOIPL.tags (tag) VALUES (_tag);
-	RETURN 1;
-END;
-$$ LANGUAGE 'plpgsql';
+
 
 /*CREATE OR REPLACE FUNCTION SOIPL.ajout_tag_question(VARCHAR,INTEGER) RETURNS INTEGER AS $$
 DECLARE
@@ -330,5 +323,37 @@ BEGIN
 	SELECT COALESCE(id_utilisateur,0) FROM SOIPL.utilisateurs WHERE nom_utilisateur=_nom_utilisateur
 	INTO _id_utilisateur;
 	RETURN _id_utilisateur;
+END;
+$$ LANGUAGE 'plpgsql';
+
+
+
+
+
+
+/*ADMINISTRATEUR*/
+CREATE OR REPLACE FUNCTION SOIPL.creation_nouveau_tag(VARCHAR) RETURNS INTEGER AS $$
+DECLARE
+	_tag ALIAS FOR $1;
+BEGIN
+	INSERT INTO SOIPL.tags (tag) VALUES (_tag);
+	RETURN 1;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION SOIPL.augmentation_forcee_statut_utilisateur (INTEGER, VARCHAR) RETURNS INTEGER AS $$
+DECLARE
+	_id_utilisateur ALIAS FOR $1;
+	_status ALIAS FOR $2;
+BEGIN
+	UPDATE SOIPL.utilisateurs SET statut = _status WHERE id_utilisateur = _id_utilisateur;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION SOIPL.desactivation_compte_utilisateur (INTEGER) RETURNS INTEGER AS $$
+DECLARE
+	_id_utilisateur ALIAS FOR $1;
+BEGIN
+	UPDATE SOIPL.utilisateurs SET desactive = true WHERE id_utilisateur = _id_utilisateur;
 END;
 $$ LANGUAGE 'plpgsql';

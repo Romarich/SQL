@@ -79,7 +79,7 @@ public class Programme {
 		return aRenvoyer.getConnection();
 	}
 	
-	public boolean connexionUtilisateur() {
+	public void connexionUtilisateur() {
 		System.out.println("Etes-vous deja inscrit ? (O/N)");
 		String caract = scanner.nextLine();
 		if("O".equals(caract)) {
@@ -132,7 +132,6 @@ public class Programme {
 		}else {
 			connexionUtilisateur();
 		}
-		return true;
 	}
 	
 	public void introduireNouvelleQuestion() {
