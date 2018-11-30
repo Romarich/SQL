@@ -20,24 +20,36 @@ public class Programme {
 	private PreparedStatement psVisualiserQuestionsPoseesSpecifiqueId;
 	private PreparedStatement psVisualiserToutesLesQuestions;
 	private PreparedStatement psVisualiserReponses;
+	private PreparedStatement psVisualiserInformationsUtilisateur;
+	private PreparedStatement psIntroductionNouvelleReponse;
 	
 	public Programme(){
 		this.connection = connexionDB();	
 		try {
+<<<<<<< HEAD
+			this.psSelectionUtilisateurDejaPresent = connection.prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ?");
+			this.psInscriptionNouvelUtil = connection.prepareStatement("SELECT SOIPL.inscription_utilisateur(?, ?, ?)");
+			this.psSelectionDeLUtilisateurEnCours = connection.prepareStatement("SELECT SOIPL.selection_id_utilisateur_avec_nom_utilisateur(?)");
+			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT SOIPL.creation_nouvelle_question(?,?,?);" );
+=======
 			this.psSelectionUtilisateurDejaPresent = connection.prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ? AND desactive <> true");
 			this.psInscriptionNouvelUtil = connection.prepareStatement("SELECT inscription_utilisateur(?, ?, ?)");
 			this.psSelectionDeLUtilisateurEnCours = connection.prepareStatement("SELECT selection_id_utilisateur_avec_nom_utilisateur(?)");
 			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT creation_nouvelle_question(?,?,?);" );
+>>>>>>> 4592d4e76ca5d97fea12dbda9c62e0824298c806
 			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
 			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT q.*, u.nom_utilisateur FROM SOIPL.questions q, SOIPL.utilisateurs u WHERE q.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions");
-			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score ASC");
+			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score DESC");
+			this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
+			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void menuAvecChoix() {
+		//scanner.reset();
 		System.out.println("----------------------------------------------");
 		System.out.println("|           Que voulez-vous faire ?          |");
 		System.out.println("----------------------------------------------");
@@ -52,7 +64,7 @@ public class Programme {
 		
 		do {
 			System.out.print("Veuillez rentrer votre choix : ");
-			choix = scanner.nextInt();
+			choix = Integer.parseInt(scanner.nextLine());
 		}while(!(choix > 0 && choix < 7));
 		
 		switch(choix) {
@@ -176,7 +188,7 @@ public class Programme {
 			menuAvecChoix();
 		}
 		System.out.println("Quel question souhaitez voir en detail ?");
-		int choixVisualisationQuestionSpecifique= scanner.nextInt();
+		int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
@@ -210,7 +222,7 @@ public class Programme {
 		int choixVisualisationQuestionSpecifique;
 		do {
 			System.out.println("Quel question souhaitez voir en detail ?");
-			choixVisualisationQuestionSpecifique = scanner.nextInt();
+			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
 		}while(!ids.contains(choixVisualisationQuestionSpecifique));
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
@@ -253,7 +265,48 @@ public class Programme {
 		
 		}
 		
+		String statut = "";
 		
+		try {
+			psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
+			ResultSet rs3 = psVisualiserInformationsUtilisateur.executeQuery();
+			while (rs3.next()) {
+				statut = rs3.getString(5);
+			}
+		}catch(SQLException se) {
+		
+		}
+		switch(statut) {
+			case "avancé":
+				System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse");
+			break;
+			
+			case "master":
+				System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse, N pour voter négativement pour une réponse");
+			break;
+			
+			default : 
+				System.out.println("Entrez votre réponse :");
+				//scanner.reset();
+				String reponse = scanner.nextLine();
+						
+				try {
+					psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
+					psIntroductionNouvelleReponse.setString(2, reponse);
+					psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
+					psIntroductionNouvelleReponse.executeQuery();
+					System.out.println("");
+					System.out.println("Merci !");
+					System.out.println("");
+				}catch(SQLException se) {
+					se.printStackTrace();
+					System.out.println("erreur");
+				}
+				
+			break;
+			
+			
+		}
 		
 		menuAvecChoix();
 	}

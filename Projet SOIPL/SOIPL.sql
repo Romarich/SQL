@@ -284,6 +284,7 @@ CREATE OR REPLACE FUNCTION SOIPL.creation_reponse (INTEGER,VARCHAR,INTEGER) RETU
 DECLARE
 	_id_question ALIAS FOR $1;
 	_texte ALIAS FOR $2;
+	_positif ALIAS FOR $3;
 	_num_rep_par_question INTEGER;
 	_id_utilisateur ALIAS FOR $3;
 BEGIN
