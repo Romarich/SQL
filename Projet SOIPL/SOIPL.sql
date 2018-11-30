@@ -91,7 +91,7 @@ CREATE TABLE SOIPL.reponses(
 	id_reponse_par_question INTEGER NOT NULL, -- qd on change de question on passe a 1.
 	id_question INTEGER REFERENCES SOIPL.questions(id_question) NOT NULL,
 	id_utilisateur INTEGER REFERENCES SOIPL.utilisateurs(id_utilisateur) NOT NULL,
-	score INTEGER NOT NULL,
+	score INTEGER NOT NULL DEFAULT 0,
 	texte VARCHAR(200) NOT NULL CHECK(texte<>''),
 	date_heure TIMESTAMP NOT NULL CHECK(date_heure <= CURRENT_TIMESTAMP)
 );
@@ -149,10 +149,8 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE TRIGGER verification_date_trigger AFTER INSERT
+CREATE TRIGGER verification_date_trigger BEFORE INSERT
 ON SOIPL.reponses EXECUTE PROCEDURE SOIPL.verif_date_reponses_ulterieures_questions();
-
-INSERT INTO SOIPL.reponses (id_reponse_par_question,id_question, score, texte, date_heure, id_utilisateur) VALUES (2,1, 20, 'Non il est degueu :p', '12/02/2016 09:09:09', 2);
 
 /*Erreur toujours
 ERREUR:  une instruction insert ou update sur la table « utilisateurs » viole la contrainte de clé
@@ -282,15 +280,16 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION SOIPL.creation_reponse (INTEGER,VARCHAR) RETURNS INTEGER AS $$
+CREATE OR REPLACE FUNCTION SOIPL.creation_reponse (INTEGER,VARCHAR,INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_question ALIAS FOR $1;
 	_texte ALIAS FOR $2;
 	_num_rep_par_question INTEGER;
+	_id_utilisateur ALIAS FOR $3;
 BEGIN
 	SELECT COALESCE(MAX(id_reponse_par_question),0) FROM SOIPL.reponses WHERE id_question = _id_question
 	INTO _num_rep_par_question; 
-	INSERT INTO SOIPL.reponses (id_utilisateur,positif,date_heure,id_question,id_reponse_par_question) VALUES (_id_utilisateur,_positif,CURRENT_TIMESTAMP,_id_question,_num_rep_par_question+1);
+	INSERT INTO SOIPL.reponses (id_reponse_par_question,id_question, texte, date_heure, id_utilisateur) VALUES (_num_rep_par_question+1,_id_question,_texte,CURRENT_TIMESTAMP,_id_utilisateur);
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
