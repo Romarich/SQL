@@ -18,9 +18,9 @@ public class Programme {
 	public Programme(){
 		this.connection = connexionDB();
 		try {
-			this.psAjoutTag = connection.prepareStatement("SELECT creation_nouveau_tag(?)");
-			this.psAugmentationForcee = connection.prepareStatement("SELECT augmentation_forcee_statut_utilisateur(?,?)");
-			this.psDesactiverCompte = connection.prepareStatement("SELECT desactivation_compte_utilisateur(?)");
+			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.creation_nouveau_tag(?)");
+			this.psAugmentationForcee = connection.prepareStatement("SELECT SOIPL.augmentation_forcee_statut_utilisateur(?,?)");
+			this.psDesactiverCompte = connection.prepareStatement("SELECT SOIPL.desactivation_compte_utilisateur(?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -68,6 +68,7 @@ public class Programme {
         } catch (Exception e) {
             e.printStackTrace();
         }
+		menuAvecChoix();
 	}
 
 	private void augmentationForcee() {
@@ -83,6 +84,7 @@ public class Programme {
         } catch (Exception e) {
             e.printStackTrace();
         }
+		menuAvecChoix();
 	}
 
 	private void desactiverCompte() {
@@ -90,11 +92,12 @@ public class Programme {
 		int idUtilisateur = scanner.nextInt();
 		try {
 			psDesactiverCompte.setInt(1, idUtilisateur);
-            ResultSet rs = psDesactiverCompte.executeQuery();
-            rs.close();
+			ResultSet rs = psDesactiverCompte.executeQuery();
+			rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+		menuAvecChoix();
 		
 	}
 
@@ -104,6 +107,11 @@ public class Programme {
 	}
 	
 	public void fermerLeProgramme(){
+		try {
+			psAjoutTag.close();
+			psAugmentationForcee.close();
+			psDesactiverCompte.close();
+		} catch (SQLException e) {}
 		scanner.close();
 		System.out.println("Au revoir et à bientôt");
 		System.exit(0);

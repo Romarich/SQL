@@ -24,7 +24,7 @@ public class Programme {
 	public Programme(){
 		this.connection = connexionDB();	
 		try {
-			this.psSelectionUtilisateurDejaPresent = connection.prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ?");
+			this.psSelectionUtilisateurDejaPresent = connection.prepareStatement("SELECT id_utilisateur, mot_de_passe FROM SOIPL.utilisateurs WHERE nom_utilisateur= ? AND desactive <> true");
 			this.psInscriptionNouvelUtil = connection.prepareStatement("SELECT inscription_utilisateur(?, ?, ?)");
 			this.psSelectionDeLUtilisateurEnCours = connection.prepareStatement("SELECT selection_id_utilisateur_avec_nom_utilisateur(?)");
 			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT creation_nouvelle_question(?,?,?);" );
@@ -99,7 +99,7 @@ public class Programme {
 	                ok = BCrypt.checkpw(password, rs.getString(2));
 	            }
 	            if(!ok) {
-	            	System.out.println("Mot de passe incorrect");
+	            	System.out.println("Mot de passe incorrect ou l'utilisateur a été désactivé");
 	            	connexionUtilisateur();
 	            }
 	            rs.close();
