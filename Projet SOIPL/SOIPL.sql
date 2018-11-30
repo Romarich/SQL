@@ -288,7 +288,7 @@ DECLARE
 	_texte ALIAS FOR $2;
 	_num_rep_par_question INTEGER;
 BEGIN
-	SELECT COALESCE(MAX(id_reponse_par_question),1) FROM SOIPL.reponses WHERE id_question = _id_question
+	SELECT COALESCE(MAX(id_reponse_par_question),0) FROM SOIPL.reponses WHERE id_question = _id_question
 	INTO _num_rep_par_question; 
 	INSERT INTO SOIPL.reponses (id_utilisateur,positif,date_heure,id_question,id_reponse_par_question) VALUES (_id_utilisateur,_positif,CURRENT_TIMESTAMP,_id_question,_num_rep_par_question+1);
 	RETURN 1;
