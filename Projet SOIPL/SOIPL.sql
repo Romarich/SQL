@@ -348,13 +348,15 @@ DECLARE
 	_status ALIAS FOR $2;
 BEGIN
 	UPDATE SOIPL.utilisateurs SET statut = _status WHERE id_utilisateur = _id_utilisateur;
+	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION SOIPL.desactivation_compte_utilisateur (INTEGER) RETURNS INTEGER AS $$
+CREATE OR REPLACE FUNCTION SOIPL.desactivation_compte_utilisateur(INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_utilisateur ALIAS FOR $1;
 BEGIN
 	UPDATE SOIPL.utilisateurs SET desactive = true WHERE id_utilisateur = _id_utilisateur;
+	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
