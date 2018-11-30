@@ -31,7 +31,7 @@ public class Programme {
 			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
 			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT q.*, u.nom_utilisateur FROM SOIPL.questions q, SOIPL.utilisateurs u WHERE q.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions");
-			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
+			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score ASC");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -216,6 +216,7 @@ public class Programme {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
 			while (rs1.next()) {
+				System.out.println("----------------------------------------------");
             	System.out.println(rs1.getString(9));
             	System.out.println(rs1.getString(1) + ", " + rs1.getString(7));
                 System.out.println("");
@@ -227,26 +228,32 @@ public class Programme {
                 }else {
                 	System.out.println();
                 }
+        		System.out.println("----------------------------------------------");
                 System.out.println("");
             }
 		}catch(SQLException se) {
 			
 		}
+		
 		try {
 			psVisualiserReponses.setInt(1, choixVisualisationQuestionSpecifique);
-			ResultSet rs1 = psVisualiserReponses.executeQuery();
-			while (rs1.next()) {
-            	System.out.println(rs1.getString(8) + " " + rs1.getString(1) + " " + rs1.getString(7) );
+			ResultSet rs2 = psVisualiserReponses.executeQuery();
+			while (rs2.next()) {
+				System.out.println("----------------------------------------------");
+            	System.out.println(rs2.getString(8) + " " + rs2.getString(1) + " " + rs2.getString(7) );
                 System.out.println("");
-                System.out.println(rs1.getString(5) + " : " + rs1.getString(6));
+                System.out.println(rs2.getString(5) + " : " + rs2.getString(6));
                 System.out.println("");
-                System.out.print(rs1.getString(3));
+                System.out.println(rs2.getString(3));
+        		System.out.println("----------------------------------------------");
                 System.out.println("");
                 System.out.println("");
 			}
 		}catch(SQLException se) {
-			
+		
 		}
+		
+		
 		
 		menuAvecChoix();
 	}
@@ -270,6 +277,7 @@ public class Programme {
 			psVisualiserQuestionsPosees.close();
 			psVisualiserQuestionsPoseesSpecifiqueId.close();
 			psVisualiserToutesLesQuestions.close();
+			psVisualiserReponses.close();
 			scanner.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
