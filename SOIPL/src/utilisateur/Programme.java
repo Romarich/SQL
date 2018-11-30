@@ -269,10 +269,31 @@ public class Programme {
 		}catch(SQLException se) {
 		
 		}
+		String reponse;
 		switch(statut) {
 			case "avancé":
 				System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse");
+				reponse = scanner.nextLine();
+				
+				try {
+					if(reponse.equals("P")) {
+						
+					}else {
+						psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
+						psIntroductionNouvelleReponse.setString(2, reponse);
+						psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
+						psIntroductionNouvelleReponse.executeQuery();
+						System.out.println("");
+						System.out.println("Merci !");
+						System.out.println("");
+					}
+				}catch(SQLException se) {
+					se.printStackTrace();
+					System.out.println("erreur");
+				}
+				
 			break;
+				
 			
 			case "master":
 				System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse, N pour voter négativement pour une réponse");
@@ -281,7 +302,7 @@ public class Programme {
 			default : 
 				System.out.println("Entrez votre réponse :");
 				//scanner.reset();
-				String reponse = scanner.nextLine();
+				reponse = scanner.nextLine();
 						
 				try {
 					psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
