@@ -33,14 +33,15 @@ public class Programme {
 		System.out.println("|1. Desactiver un compte.                    |");
 		System.out.println("|2. Augmentation forcee d'un compte.         |");
 		System.out.println("|3. Ajouter un tag.                          |");
-		System.out.println("|4. Eteindre le programme.                   |");
+		System.out.println("|4. Historique d'un utilisateur.             |");
+		System.out.println("|5. Eteindre le programme.                   |");
 		System.out.println("----------------------------------------------");
 		int choix = 0;
 		
 		do {
 			System.out.print("Veuillez rentrer votre choix : ");
 			choix = scanner.nextInt();
-		}while(!(choix > 0 && choix < 5));
+		}while(!(choix > 0 && choix < 6));
 		
 		switch(choix) {
 			case 1:
@@ -53,6 +54,9 @@ public class Programme {
 				ajouterTag();
 				break;
 			case 4:
+				historiqueUtilisateur();
+				break;
+			case 5:
 				fermerLeProgramme();
 				break;
 		}
@@ -100,13 +104,25 @@ public class Programme {
 		menuAvecChoix();
 		
 	}
+	
+	private void historiqueUtilisateur() {
+		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez desactiver le compte :");
+		int idUtilisateur = scanner.nextInt();
+		try {
+			//TODO
+			System.out.println("Pour l'instant ne fonctionne pas");
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		menuAvecChoix();
+	}
 
 	public Connection connexionDB() {
 		ConnexionDB aRenvoyer = new ConnexionDB();
 		return aRenvoyer.getConnection();
 	}
 	
-	public void fermerLeProgramme(){
+	private void fermerLeProgramme(){
 		try {
 			psAjoutTag.close();
 			psAugmentationForcee.close();
