@@ -286,6 +286,7 @@ CREATE OR REPLACE FUNCTION SOIPL.creation_reponse (INTEGER,VARCHAR) RETURNS INTE
 DECLARE
 	_id_question ALIAS FOR $1;
 	_texte ALIAS FOR $2;
+	_positif ALIAS FOR $3;
 	_num_rep_par_question INTEGER;
 BEGIN
 	SELECT COALESCE(MAX(id_reponse_par_question),0) FROM SOIPL.reponses WHERE id_question = _id_question
