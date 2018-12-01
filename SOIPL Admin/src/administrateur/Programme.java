@@ -6,6 +6,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class Programme {
@@ -14,6 +17,8 @@ public class Programme {
 	private PreparedStatement psAjoutTag;
 	private PreparedStatement psAugmentationForcee;
 	private PreparedStatement psDesactiverCompte;
+	private PreparedStatement psHistoriqueQuestions;
+	private PreparedStatement psHistoriqueReponses;
 	
 	public Programme(){
 		this.connection = connexionDB();
@@ -21,6 +26,8 @@ public class Programme {
 			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.creation_nouveau_tag(?)");
 			this.psAugmentationForcee = connection.prepareStatement("SELECT SOIPL.augmentation_forcee_statut_utilisateur(?,?)");
 			this.psDesactiverCompte = connection.prepareStatement("SELECT SOIPL.desactivation_compte_utilisateur(?)");
+			this.psHistoriqueQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ? AND date_creation >= ? AND date_creation <= ?");
+			this.psHistoriqueReponses = connection.prepareStatement("");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -106,14 +113,51 @@ public class Programme {
 	}
 	
 	private void historiqueUtilisateur() {
-		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez desactiver le compte :");
+		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez afficher l'historique :");
 		int idUtilisateur = scanner.nextInt();
+		System.out.println("Veuillez rentrer la date de debut sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
+		LocalDateTime dateDebut = LocalDateTime.parse(scanner.next());
+		System.out.println(dateDebut);
+		System.out.println("Veuillez rentrer la date de fin sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
+		LocalDateTime dateFin = LocalDateTime.parse(scanner.next());
+		System.out.println(dateFin);
+		System.out.println(Timestamp.valueOf(dateFin));
+		System.out.println("---------------------------------------");
+		System.out.println("| Liste de l'historique des questions |");
+		System.out.println("---------------------------------------");
 		try {
-			//TODO
-			System.out.println("Pour l'instant ne fonctionne pas");
+			psHistoriqueQuestions.setInt(1, idUtilisateur);
+			psHistoriqueQuestions.setTimestamp(2, Timestamp.valueOf(dateDebut));
+			psHistoriqueQuestions.setTimestamp(3, Timestamp.valueOf(dateFin));
+			ResultSet rs = psHistoriqueQuestions.executeQuery();
+			while (rs.next()) {
+                if(rs.getInt(4) == 0) {
+                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2)+"|"+ rs.getTimestamp(3)+"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
+                }else {                	
+                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2) +"|"+ rs.getTimestamp(3) +"|"+ rs.getInt(4)+"|"+ rs.getTimestamp(5) +"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
+                }
+            }
+			rs.close();
 		}catch(Exception e) {
-			e.printStackTrace();
+			System.out.println("Il n'y a pas de questions de l'utilisateur entre ces dates-là.");
 		}
+		System.out.println();
+		System.out.println("---------------------------------------");
+		System.out.println("| Liste de l'historique des reponses  |");
+		System.out.println("---------------------------------------");
+		try {
+			psHistoriqueReponses.setInt(1, idUtilisateur);
+			psHistoriqueReponses.setTimestamp(2, Timestamp.valueOf(dateDebut));
+			psHistoriqueReponses.setTimestamp(3, Timestamp.valueOf(dateFin));
+			ResultSet rsRep = psHistoriqueReponses.executeQuery();
+			while (rsRep.next()) {
+                System.out.println(rsRep.getInt(1) + ". " + rsRep.getInt(2)+"|"+ rsRep.getInt(3)+"|"+ rsRep.getInt(4) +"|"+ rsRep.getInt(5)+"|"+ rsRep.getString(6)+"|"+ rsRep.getTimestamp(7));
+            }
+			rsRep.close();
+		}catch(Exception e) {
+			System.out.println("Il n'y a pas de réponses de l'utilisateur entre ces dates-là.");
+		}
+		System.out.println();
 		menuAvecChoix();
 	}
 
