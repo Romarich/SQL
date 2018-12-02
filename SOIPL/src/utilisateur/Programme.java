@@ -161,14 +161,13 @@ public class Programme {
 		}catch (SQLException se) {
 			System.out.println("Erreur lors de l’insertion !");
 			se.printStackTrace();
-			System.exit(1); 
+			System.exit(1);
 		}
 		menuAvecChoix();
 	}
 	
 	public void visualiserQuestionsPosees() {
 		try {
-			
 			psVisualiserQuestionsPosees.setInt(1, utilisateur);
 			ResultSet rs = psVisualiserQuestionsPosees.executeQuery();
 			int i = 0;

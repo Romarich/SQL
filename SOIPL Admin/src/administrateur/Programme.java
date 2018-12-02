@@ -7,7 +7,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Scanner;
 
@@ -27,7 +26,7 @@ public class Programme {
 			this.psAugmentationForcee = connection.prepareStatement("SELECT SOIPL.augmentation_forcee_statut_utilisateur(?,?)");
 			this.psDesactiverCompte = connection.prepareStatement("SELECT SOIPL.desactivation_compte_utilisateur(?)");
 			this.psHistoriqueQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ? AND date_creation >= ? AND date_creation <= ?");
-			this.psHistoriqueReponses = connection.prepareStatement("");
+			this.psHistoriqueReponses = connection.prepareStatement("SELECT * FROM SOIPL.responses WHERE id_utilisateur = ? AND date_heure >= ? AND date_heure <= ?");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -117,11 +116,8 @@ public class Programme {
 		int idUtilisateur = scanner.nextInt();
 		System.out.println("Veuillez rentrer la date de debut sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
 		LocalDateTime dateDebut = LocalDateTime.parse(scanner.next());
-		System.out.println(dateDebut);
 		System.out.println("Veuillez rentrer la date de fin sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
 		LocalDateTime dateFin = LocalDateTime.parse(scanner.next());
-		System.out.println(dateFin);
-		System.out.println(Timestamp.valueOf(dateFin));
 		System.out.println("---------------------------------------");
 		System.out.println("| Liste de l'historique des questions |");
 		System.out.println("---------------------------------------");
@@ -171,6 +167,8 @@ public class Programme {
 			psAjoutTag.close();
 			psAugmentationForcee.close();
 			psDesactiverCompte.close();
+			psHistoriqueQuestions.close();
+			psHistoriqueReponses.close();
 		} catch (SQLException e) {}
 		scanner.close();
 		System.out.println("Au revoir et à bientôt");
