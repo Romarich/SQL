@@ -22,6 +22,8 @@ public class Programme {
 	private PreparedStatement psVisualiserReponses;
 	private PreparedStatement psVisualiserInformationsUtilisateur;
 	private PreparedStatement psIntroductionNouvelleReponse;
+	private PreparedStatement psUtilisateurPasDesactive;
+	
 	
 	public Programme(){
 		this.connection = connexionDB();	
@@ -36,6 +38,7 @@ public class Programme {
 			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score DESC");
 			this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
+			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive SOIPL.utilisateurs WHERE id_utilisateur =?");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -43,6 +46,7 @@ public class Programme {
 	
 	public void menuAvecChoix() {
 		//scanner.reset();
+		//utilisateurDesactive();
 		System.out.println("----------------------------------------------");
 		System.out.println("|           Que voulez-vous faire ?          |");
 		System.out.println("----------------------------------------------");
@@ -51,14 +55,15 @@ public class Programme {
 		System.out.println("|3. Visualiser les questions repondues.      |");
 		System.out.println("|4. Visualiser toutes les questions.         |");
 		System.out.println("|5. Visualiser les questions d'un tag.       |");
-		System.out.println("|6. Eteindre le programme.                   |");
+		System.out.println("|6. Deconnexion utilisateur.                 |");
+		System.out.println("|7. Eteindre le programme.                   |");
 		System.out.println("----------------------------------------------");
 		int choix = 0;
 		
 		do {
 			System.out.print("Veuillez rentrer votre choix : ");
 			choix = Integer.parseInt(scanner.nextLine());
-		}while(!(choix > 0 && choix < 7));
+		}while(!(choix > 0 && choix < 8));
 		
 		switch(choix) {
 			case 1:
@@ -77,6 +82,9 @@ public class Programme {
 				visualiserQuestionsAvecTag(); 
 				break;
 			case 6:
+				connexionUtilisateur();
+				break;
+			case 7:
 				fermerLeProgramme();
 				break;
 		}
@@ -143,6 +151,7 @@ public class Programme {
 	}
 	
 	public void introduireNouvelleQuestion() {
+		//utilisateurDesactive();
 		System.out.println("Introduisez le titre de votre nouvelle question");
 		String titre="";
 		while("".equals(titre)) {
@@ -167,6 +176,7 @@ public class Programme {
 	}
 	
 	public void visualiserQuestionsPosees() {
+		//utilisateurDesactive();
 		try {
 			psVisualiserQuestionsPosees.setInt(1, utilisateur);
 			ResultSet rs = psVisualiserQuestionsPosees.executeQuery();
@@ -196,6 +206,7 @@ public class Programme {
 	}
 	
 	public void toutesLesQuestions() {
+		//utilisateurDesactive();
 		System.out.println("Affichage de toutes les questions");
 		ArrayList<Integer> ids = new ArrayList<Integer>();
 		try {
@@ -325,14 +336,35 @@ public class Programme {
 	}
 	
 	public void visualiserQuestionsRepondues() {
+		//utilisateurDesactive();
 		System.out.println("Affichage de toutes les questions répondues");
 		menuAvecChoix();
 	}
 	
 	public void visualiserQuestionsAvecTag() {
+		//utilisateurDesactive();
 		System.out.println("Affichage de toutes les questions avec tag specifique");
 		menuAvecChoix();
 	}
+	
+	/*public void utilisateurDesactive() {
+		try {
+			psUtilisateurPasDesactive.setInt(1, utilisateur);
+            ResultSet rs = psUtilisateurPasDesactive.executeQuery();
+            boolean ok = false;
+            while (rs.next()) {
+            	ok = rs.getBoolean(1);
+            }
+            if(ok) {
+            	System.out.println("Vous avez été désactivé");
+            	connexionUtilisateur();
+            }
+            rs.close();
+        } catch (Exception e) {
+        	System.out.println("ici");
+            e.printStackTrace();
+        }
+	}*/
 	
 	public void fermerLeProgramme(){
 		try {
