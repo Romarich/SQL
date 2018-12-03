@@ -214,7 +214,6 @@ public class Programme {
 	
 	public void toutesLesQuestions() {
 		utilisateurDesactive();
-		System.out.println("Affichage de toutes les questions");
 		ArrayList<Integer> ids = new ArrayList<Integer>();
 		try {
             ResultSet rs = psVisualiserToutesLesQuestions.executeQuery();
@@ -237,65 +236,91 @@ public class Programme {
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
+			System.out.println("##############################################");
 			while (rs1.next()) {
-				System.out.println("----------------------------------------------");
-            	System.out.println(rs1.getString(9));
-            	System.out.println(rs1.getString(1) + ", " + rs1.getString(7));
-                System.out.println("");
-                System.out.println(rs1.getString(6));
-                System.out.println("");
+            	System.out.println("Question de : " + rs1.getString(9));
+            	System.out.println(rs1.getString(1) + ". " + rs1.getString(7));
+                System.out.println("\t" + rs1.getString(6));
                 System.out.print(rs1.getString(3));
                 if(rs1.getString(4) != null) {
                 	System.out.println(", dernière edition :" + rs1.getString(4) + " par " + rs1.getString(5));
                 }else {
                 	System.out.println();
                 }
-        		System.out.println("----------------------------------------------");
+                System.out.println("##############################################");
                 System.out.println("");
             }
 		}catch(SQLException se) {
-			
+			System.out.println("Cette question spécifique n'existe pas");
+			toutesLesQuestions();
 		}
+		
+		System.out.println("Réponses à la question :");
 		
 		try {
 			psVisualiserReponses.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs2 = psVisualiserReponses.executeQuery();
+			System.out.println("----------------------------------------------");
 			while (rs2.next()) {
-				System.out.println("----------------------------------------------");
-            	System.out.println(rs2.getString(8) + " " + rs2.getString(1) + " " + rs2.getString(7) );
-                System.out.println("");
-                System.out.println(rs2.getString(5) + " : " + rs2.getString(6));
-                System.out.println("");
-                System.out.println(rs2.getString(3));
+            	System.out.println("Réponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
+                System.out.println("\t" + rs2.getString(6));
+                System.out.println("Score de la réponse : " + rs2.getString(5));
         		System.out.println("----------------------------------------------");
                 System.out.println("");
-                System.out.println("");
 			}
 		}catch(SQLException se) {
 		
 		}
-		
-		String statut = "";
-		
-		try {
-			psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
-			ResultSet rs3 = psVisualiserInformationsUtilisateur.executeQuery();
-			while (rs3.next()) {
-				statut = rs3.getString(5);
+		System.out.println("Souhaitez vous répondre à la question ? (O/N)");
+		String rep = scanner.nextLine();
+		if("O".equals(rep)) {
+			String statut = "";
+			
+			try {
+				psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
+				ResultSet rs3 = psVisualiserInformationsUtilisateur.executeQuery();
+				while (rs3.next()) {
+					statut = rs3.getString(5);
+				}
+			}catch(SQLException se) {
+			
 			}
-		}catch(SQLException se) {
-		
-		}
-		String reponse;
-		switch(statut) {
-			case "avancé":
-				System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse");
-				reponse = scanner.nextLine();
+			String reponse;
+			switch(statut) {
+				case "avancé":
+					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse");
+					reponse = scanner.nextLine();
+					
+					try {
+						if(reponse.equals("P")) {
+							
+						}else {
+							psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
+							psIntroductionNouvelleReponse.setString(2, reponse);
+							psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
+							psIntroductionNouvelleReponse.executeQuery();
+							System.out.println("");
+							System.out.println("Merci !");
+							System.out.println("");
+						}
+					}catch(SQLException se) {
+						se.printStackTrace();
+						System.out.println("erreur");
+					}
+					
+				break;
+					
 				
-				try {
-					if(reponse.equals("P")) {
-						
-					}else {
+				case "master":
+					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse, N pour voter négativement pour une réponse");
+				break;
+				
+				default : 
+					System.out.println("Entrez votre réponse : ");
+					scanner.reset();
+					reponse = scanner.nextLine();
+							
+					try {
 						psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
 						psIntroductionNouvelleReponse.setString(2, reponse);
 						psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
@@ -303,42 +328,16 @@ public class Programme {
 						System.out.println("");
 						System.out.println("Merci !");
 						System.out.println("");
+					}catch(SQLException se) {
+						se.printStackTrace();
+						System.out.println("erreur");
 					}
-				}catch(SQLException se) {
-					se.printStackTrace();
-					System.out.println("erreur");
-				}
+					
+				break;
 				
-			break;
 				
-			
-			case "master":
-				System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse, N pour voter négativement pour une réponse");
-			break;
-			
-			default : 
-				System.out.println("Entrez votre réponse :");
-				//scanner.reset();
-				reponse = scanner.nextLine();
-						
-				try {
-					psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
-					psIntroductionNouvelleReponse.setString(2, reponse);
-					psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
-					psIntroductionNouvelleReponse.executeQuery();
-					System.out.println("");
-					System.out.println("Merci !");
-					System.out.println("");
-				}catch(SQLException se) {
-					se.printStackTrace();
-					System.out.println("erreur");
-				}
-				
-			break;
-			
-			
+			}
 		}
-		
 		menuAvecChoix();
 	}
 	
