@@ -20,7 +20,7 @@
 --TODO : APPLICATION CENTRALE
 -- ╔ FAIT :: desactiver compte (enlever connexion)
 -- ╠ FAIT :: augmentation forcée de statut 
--- ╠ consulter historique utilisateur     ---- ??
+-- ╠ FAIT :: consulter historique utilisateur
 -- ╚ FAIT :: ajouter tag.
 
 
@@ -52,7 +52,7 @@ CREATE TABLE SOIPL.statuts(
 
 CREATE TABLE SOIPL.tags(
 	id_tag SERIAL PRIMARY KEY, 
-	tag VARCHAR(50) NOT NULL CHECK (tag <> '')
+	tag VARCHAR(50) NOT NULL CHECK (tag <> '') UNIQUE
 );
 
 CREATE TABLE SOIPL.utilisateurs(
@@ -84,7 +84,7 @@ CREATE TABLE SOIPL.question_tag(
 	id_question INTEGER REFERENCES SOIPL.questions(id_question),
 	id_tag INTEGER REFERENCES SOIPL.tags(id_tag)
 );
--- faire un trigger date_heure > questions.date_creation TODO
+-- faire un trigger date_heure > questions.date_creation FAIT
 -- doit etre fait par un utilisateur aussi :: FAIT
 CREATE TABLE SOIPL.reponses(
 	id_reponse SERIAL PRIMARY KEY,
@@ -152,11 +152,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER verification_date_trigger BEFORE INSERT
 ON SOIPL.reponses EXECUTE PROCEDURE SOIPL.verif_date_reponses_ulterieures_questions();
 
-/*Erreur toujours
-ERREUR:  une instruction insert ou update sur la table « utilisateurs » viole la contrainte de clé
-étrangère « utilisateurs_statut_fkey »
-DETAIL:  La clé (statut)=(avance) n'est pas présente dans la table « statuts ».
-CONTEXT:  instruction SQL « UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur »
+/*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
 
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
@@ -166,7 +162,7 @@ IF OLD.statut <> 'master'
 THEN
 	IF NEW.reputation > 50 AND NEW.reputation <100
 	THEN 
-		_nom_statut = 'avance';
+		_nom_statut = 'avancé';
 	END IF;
 	IF NEW.reputation = 100
 	THEN 
@@ -174,10 +170,10 @@ THEN
 	END IF;
 		
 
-	//SELECT COALESCE(s.nom_statut,NULL) FROM SOIPL.statuts s, SOIPL.utilisateurs u
-	//WHERE u.id_utilisateur = NEW.id_utilisateur
-	//AND u.reputation >= (SELECT MAX(s1.seuil) FROM SOIPL.statuts s1 WHERE s1.seuil < u.reputation)
-	//INTO nom_statut;
+	SELECT COALESCE(s.nom_statut,NULL) FROM SOIPL.statuts s, SOIPL.utilisateurs u
+	WHERE u.id_utilisateur = NEW.id_utilisateur
+	AND u.reputation >= (SELECT MAX(s1.seuil) FROM SOIPL.statuts s1 WHERE s1.seuil < u.reputation)
+	INTO _nom_statut;
 
 	IF OLD.statut <> _nom_statut
 	THEN
@@ -188,12 +184,12 @@ END IF;
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-*/
+
 
 --DROP TRIGGER statut_maj_trigger ON SOIPL.utilisateurs; A retirer apres
-/*CREATE TRIGGER statut_maj_trigger AFTER UPDATE ON SOIPL.utilisateurs FOR EACH ROW
+CREATE TRIGGER statut_maj_trigger AFTER UPDATE ON SOIPL.utilisateurs FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.statut_maj();
-
+/*
 UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 */
 
@@ -356,11 +352,5 @@ DECLARE
 BEGIN
 	UPDATE SOIPL.utilisateurs SET desactive = true WHERE id_utilisateur = _id_utilisateur;
 	RETURN 1;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE OR REPLACE FUNCTION SOIPL.historique_utilisateur (INTEGER) RETURNS INTEGER AS $$
-DECLARE
-BEGIN
 END;
 $$ LANGUAGE 'plpgsql';

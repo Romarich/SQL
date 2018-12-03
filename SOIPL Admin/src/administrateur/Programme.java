@@ -76,7 +76,7 @@ public class Programme {
             ResultSet rs = psAjoutTag.executeQuery();
             rs.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Le tag que vous avez demandé d'insérer existe déjà");
         }
 		menuAvecChoix();
 	}

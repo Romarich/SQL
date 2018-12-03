@@ -23,6 +23,8 @@ public class Programme {
 	private PreparedStatement psVisualiserInformationsUtilisateur;
 	private PreparedStatement psIntroductionNouvelleReponse;
 	private PreparedStatement psUtilisateurPasDesactive;
+	private PreparedStatement psSelectionDeTousLesTags;
+	private PreparedStatement psSelectionQuestionParTag;
 	
 	
 	public Programme(){
@@ -38,7 +40,9 @@ public class Programme {
 			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score DESC");
 			this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
-			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive SOIPL.utilisateurs WHERE id_utilisateur =?");
+			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
+			this.psSelectionDeTousLesTags = connection.prepareStatement("SELECT * FROM SOIPL.tags");
+			this.psSelectionQuestionParTag = connection.prepareStatement("SELECT * FROM SOIPL.questions q, SOIPL.question_tag t WHERE t.id_tag = ? AND q.id_question = t.id_question");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -46,7 +50,7 @@ public class Programme {
 	
 	public void menuAvecChoix() {
 		//scanner.reset();
-		//utilisateurDesactive();
+		utilisateurDesactive();
 		System.out.println("----------------------------------------------");
 		System.out.println("|           Que voulez-vous faire ?          |");
 		System.out.println("----------------------------------------------");
@@ -114,6 +118,8 @@ public class Programme {
 	            if(!ok) {
 	            	System.out.println("Mot de passe incorrect ou l'utilisateur a été désactivé");
 	            	connexionUtilisateur();
+	            }else {
+	            	menuAvecChoix();
 	            }
 	            rs.close();
 	        } catch (Exception e) {
@@ -145,13 +151,14 @@ public class Programme {
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
+			menuAvecChoix();
 		}else {
 			connexionUtilisateur();
 		}
 	}
 	
 	public void introduireNouvelleQuestion() {
-		//utilisateurDesactive();
+		utilisateurDesactive();
 		System.out.println("Introduisez le titre de votre nouvelle question");
 		String titre="";
 		while("".equals(titre)) {
@@ -176,7 +183,7 @@ public class Programme {
 	}
 	
 	public void visualiserQuestionsPosees() {
-		//utilisateurDesactive();
+		utilisateurDesactive();
 		try {
 			psVisualiserQuestionsPosees.setInt(1, utilisateur);
 			ResultSet rs = psVisualiserQuestionsPosees.executeQuery();
@@ -206,7 +213,7 @@ public class Programme {
 	}
 	
 	public void toutesLesQuestions() {
-		//utilisateurDesactive();
+		utilisateurDesactive();
 		System.out.println("Affichage de toutes les questions");
 		ArrayList<Integer> ids = new ArrayList<Integer>();
 		try {
@@ -336,18 +343,38 @@ public class Programme {
 	}
 	
 	public void visualiserQuestionsRepondues() {
-		//utilisateurDesactive();
+		utilisateurDesactive();
 		System.out.println("Affichage de toutes les questions répondues");
 		menuAvecChoix();
 	}
 	
 	public void visualiserQuestionsAvecTag() {
-		//utilisateurDesactive();
-		System.out.println("Affichage de toutes les questions avec tag specifique");
+		utilisateurDesactive();
+		System.out.println("voici la liste des tags");
+		try {
+			ResultSet rs = psSelectionDeTousLesTags.executeQuery();
+			while(rs.next()) {
+				System.out.println(rs.getInt(1) + ". " + rs.getString(2));
+			}
+		}catch(SQLException se) {
+			se.printStackTrace();
+		}
+		System.out.println("Veuillez choisir le numero du tag que vous souhaitez regarder");
+		int chiffre = scanner.nextInt();
+		try {
+			psSelectionQuestionParTag.setInt(1, chiffre);
+			ResultSet rs = psSelectionQuestionParTag.executeQuery();
+			while(rs.next()) {
+				System.out.println(rs.getInt(1) + ". " + rs.getInt(2) + " " + rs.getTimestamp(3) + " " + rs.getInt(4) + " " + rs.getTimestamp(5) + " " + rs.getString(6) + " " + rs.getString(7) + " " + rs.getBoolean(8));
+			}
+		}catch(SQLException se) {
+			se.printStackTrace();
+		}
+		//TODO erreur mais pk ?
 		menuAvecChoix();
 	}
 	
-	/*public void utilisateurDesactive() {
+	public void utilisateurDesactive() {
 		try {
 			psUtilisateurPasDesactive.setInt(1, utilisateur);
             ResultSet rs = psUtilisateurPasDesactive.executeQuery();
@@ -364,7 +391,7 @@ public class Programme {
         	System.out.println("ici");
             e.printStackTrace();
         }
-	}*/
+	}
 	
 	public void fermerLeProgramme(){
 		try {
@@ -384,5 +411,3 @@ public class Programme {
 		System.exit(0);
 	}
 }
-
-
