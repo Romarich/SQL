@@ -262,7 +262,7 @@ public class Programme {
 			ResultSet rs2 = psVisualiserReponses.executeQuery();
 			System.out.println("----------------------------------------------");
 			while (rs2.next()) {
-            	System.out.println("Réponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
+            	System.out.println(rs2.getInt(2) + ". Réponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
                 System.out.println("\t" + rs2.getString(6));
                 System.out.println("Score de la réponse : " + rs2.getString(5));
         		System.out.println("----------------------------------------------");
@@ -271,10 +271,24 @@ public class Programme {
 		}catch(SQLException se) {
 		
 		}
-		System.out.println("Souhaitez vous répondre à la question ? (O/N)");
+		String statut = "";
+		
+		try {
+			psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
+			ResultSet rs3 = psVisualiserInformationsUtilisateur.executeQuery();
+			while (rs3.next()) {
+				statut = rs3.getString(5);
+			}
+		}catch(SQLException se) {
+		
+		}
+		System.out.print("Souhaitez vous répondre à la question ");
+		if("avancé".equals(statut) || "master".equals(statut)) {
+			System.out.print(" ou voter ");
+		}
+		System.out.println("? (O/N)");
 		String rep = scanner.nextLine();
 		if("O".equals(rep)) {
-			String statut = "";
 			
 			try {
 				psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
