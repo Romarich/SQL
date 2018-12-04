@@ -154,17 +154,24 @@ ON SOIPL.reponses EXECUTE PROCEDURE SOIPL.verif_date_reponses_ulterieures_questi
 
 /*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
 
+-- le fait de pas pouvoir faire redescendre les droits ne fonctionnent pas
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
 _nom_statut VARCHAR(6);
+_seuil_avance INTEGER;
+_seuil_master INTEGER;
 BEGIN
 IF OLD.statut <> 'master'
 THEN
-	IF NEW.reputation > 50 AND NEW.reputation <100
+	SELECT seuil FROM SOIPL.statuts WHERE nom_statut LIKE 'master'
+	INTO _seuil_master;
+	SELECT seuil FROM SOIPL.statuts WHERE nom_statut LIKE 'avancé'
+	INTO _seuil_avance;
+	IF NEW.reputation > _seuil_avance AND NEW.reputation < _seuil_master
 	THEN 
 		_nom_statut = 'avancé';
 	END IF;
-	IF NEW.reputation = 100
+	IF NEW.reputation = _seuil_master
 	THEN 
 		_nom_statut = 'master';
 	END IF;
