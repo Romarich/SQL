@@ -27,6 +27,7 @@ public class Programme {
 	private PreparedStatement psSelectionQuestionParTag;
 	
 	
+	
 	public Programme(){
 		this.connection = connexionDB();	
 		try {
@@ -116,7 +117,7 @@ public class Programme {
 	                ok = BCrypt.checkpw(password, rs.getString(2));
 	            }
 	            if(!ok) {
-	            	System.out.println("Mot de passe incorrect ou l'utilisateur a été désactivé");
+	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a été désactivé");
 	            	connexionUtilisateur();
 	            }else {
 	            	menuAvecChoix();
