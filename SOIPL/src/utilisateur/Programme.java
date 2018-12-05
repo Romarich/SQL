@@ -26,8 +26,6 @@ public class Programme {
 	private PreparedStatement psSelectionDeTousLesTags;
 	private PreparedStatement psSelectionQuestionParTag;
 	
-	
-	
 	public Programme(){
 		this.connection = connexionDB();	
 		try {
