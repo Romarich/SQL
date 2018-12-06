@@ -80,8 +80,8 @@ public class Programme {
 		String tag = scanner.next();
 		try {
 			psAjoutTag.setString(1, tag);
-            ResultSet rs = psAjoutTag.executeQuery();
-            rs.close();
+            try( ResultSet rs = psAjoutTag.executeQuery()){
+            }catch(Exception e) {}
         } catch (Exception e) {
             System.out.println("Le tag que vous avez demandé d'insérer existe déjà");
         }
@@ -97,12 +97,10 @@ public class Programme {
 		try {
 			psAugmentationForcee.setInt(1, idUtilisateur);
 			psAugmentationForcee.setString(2, status);
-            try (ResultSet rs = psAugmentationForcee.executeQuery()){
-            	
-            } catch(Exception e) {
+            try (ResultSet rs = psAugmentationForcee.executeQuery()){ 
+			}catch(Exception e) {
             	System.out.println(e);
             }
-   
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,8 +113,8 @@ public class Programme {
 		int idUtilisateur = scanner.nextInt();
 		try {
 			psDesactiverCompte.setInt(1, idUtilisateur);
-			ResultSet rs = psDesactiverCompte.executeQuery();
-			rs.close();
+			try( ResultSet rs = psDesactiverCompte.executeQuery()){
+            }catch(Exception e) {}
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -128,10 +126,10 @@ public class Programme {
 		affichageUtilisateur();
 		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez afficher l'historique :");
 		int idUtilisateur = scanner.nextInt();
-		System.out.println("Veuillez rentrer la date de debut sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
-		LocalDateTime dateDebut = LocalDateTime.parse(scanner.next());
-		System.out.println("Veuillez rentrer la date de fin sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
-		LocalDateTime dateFin = LocalDateTime.parse(scanner.next());
+		System.out.println("Veuillez rentrer la date de debut sous le format ('yyyy-MM-dd'):");
+		LocalDateTime dateDebut = LocalDateTime.parse(scanner.next()+"T00:00:00.000");
+		System.out.println("Veuillez rentrer la date de fin sous le format ('yyyy-MM-dd'):");
+		LocalDateTime dateFin = LocalDateTime.parse(scanner.next()+"T00:00:00.000");
 		System.out.println("---------------------------------------");
 		System.out.println("| Liste de l'historique des questions |");
 		System.out.println("---------------------------------------");
@@ -139,15 +137,15 @@ public class Programme {
 			psHistoriqueQuestions.setInt(1, idUtilisateur);
 			psHistoriqueQuestions.setTimestamp(2, Timestamp.valueOf(dateDebut));
 			psHistoriqueQuestions.setTimestamp(3, Timestamp.valueOf(dateFin));
-			ResultSet rs = psHistoriqueQuestions.executeQuery();
-			while (rs.next()) {
-                if(rs.getInt(4) == 0) {
-                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2)+"|"+ rs.getTimestamp(3)+"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
-                }else {                	
-                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2) +"|"+ rs.getTimestamp(3) +"|"+ rs.getInt(4)+"|"+ rs.getTimestamp(5) +"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
-                }
-            }
-			rs.close();
+			try( ResultSet rs = psHistoriqueQuestions.executeQuery()){
+				while (rs.next()) {
+	                if(rs.getInt(4) == 0) {
+	                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2)+"|"+ rs.getTimestamp(3)+"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
+	                }else {                	
+	                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2) +"|"+ rs.getTimestamp(3) +"|"+ rs.getInt(4)+"|"+ rs.getTimestamp(5) +"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
+	                }
+	            }
+			}catch(Exception e) {};
 		}catch(Exception e) {
 			System.out.println("Il n'y a pas de questions de l'utilisateur entre ces dates-là.");
 		}
@@ -159,11 +157,11 @@ public class Programme {
 			psHistoriqueReponses.setInt(1, idUtilisateur);
 			psHistoriqueReponses.setTimestamp(2, Timestamp.valueOf(dateDebut));
 			psHistoriqueReponses.setTimestamp(3, Timestamp.valueOf(dateFin));
-			ResultSet rsRep = psHistoriqueReponses.executeQuery();
-			while (rsRep.next()) {
-                System.out.println(rsRep.getInt(1) + ". " + rsRep.getInt(2)+"|"+ rsRep.getInt(3)+"|"+ rsRep.getInt(4) +"|"+ rsRep.getInt(5)+"|"+ rsRep.getString(6)+"|"+ rsRep.getTimestamp(7));
-            }
-			rsRep.close();
+			try( ResultSet rsRep = psHistoriqueReponses.executeQuery()){
+				while (rsRep.next()) {
+	                System.out.println(rsRep.getInt(1) + ". " + rsRep.getInt(2)+"|"+ rsRep.getInt(3)+"|"+ rsRep.getInt(4) +"|"+ rsRep.getInt(5)+"|"+ rsRep.getString(6)+"|"+ rsRep.getTimestamp(7));
+	            }
+			}catch(Exception e) {};
 		}catch(Exception e) {
 			System.out.println("Il n'y a pas de réponses de l'utilisateur entre ces dates-là.");
 		}
@@ -172,8 +170,7 @@ public class Programme {
 	}
 	
 	private void affichageUtilisateur() {
-		try {
-			ResultSet rs = psListeUtilisateurs.executeQuery();
+		try (ResultSet rs = psListeUtilisateurs.executeQuery()){
 			while(rs.next()) {
 				System.out.println(rs.getInt(1) +". " + rs.getString(2) + "|" + rs.getString(4) + "|" + rs.getString(5) + "|" + rs.getInt(6) + "|" + rs.getBoolean(7));
 			}

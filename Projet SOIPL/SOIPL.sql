@@ -1,8 +1,6 @@
 ﻿--TODO : GRANT
 --TODO : TRIGGER
 
---TODO : mettre dsd au propre
-
 --TODO : APPLICATION UTILISATEUR
 -- ╔ vérifier si utilisateur non désactivé à la connexion (trigger)
 -- ╠ ajout tag questions (insert) nam                      
