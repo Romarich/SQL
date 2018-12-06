@@ -81,10 +81,10 @@ public class Programme {
 		try {
 			psAjoutTag.setString(1, tag);
             try( ResultSet rs = psAjoutTag.executeQuery()){
-            }catch(Exception e) {}
-        } catch (Exception e) {
-            System.out.println("Le tag que vous avez demandé d'insérer existe déjà");
-        }
+            }catch(Exception e) {
+            	System.out.println("Le tag que vous avez demandé d'insérer existe déjà");
+            }
+        } catch (Exception e) {}
 		menuAvecChoix();
 	}
 
@@ -145,10 +145,10 @@ public class Programme {
 	                	System.out.println(rs.getInt(1) + ". " + rs.getInt(2) +"|"+ rs.getTimestamp(3) +"|"+ rs.getInt(4)+"|"+ rs.getTimestamp(5) +"|"+ rs.getString(6) +"|"+ rs.getString(7) +"|"+ rs.getBoolean(8));
 	                }
 	            }
-			}catch(Exception e) {};
-		}catch(Exception e) {
-			System.out.println("Il n'y a pas de questions de l'utilisateur entre ces dates-là.");
-		}
+			}catch(Exception e) {
+				System.out.println("Il n'y a pas de questions de l'utilisateur entre ces dates-là.");
+			};
+		}catch(Exception e) {}
 		System.out.println();
 		System.out.println("---------------------------------------");
 		System.out.println("| Liste de l'historique des reponses  |");

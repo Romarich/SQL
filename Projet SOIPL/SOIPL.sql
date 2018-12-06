@@ -41,7 +41,7 @@ DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
 CREATE SCHEMA SOIPL;
 
-
+/*
 DROP ROLE IF EXISTS rhonore16;
 CREATE ROLE rhonore16 LOGIN PASSWORD ')XUE7Ha';
 
@@ -49,13 +49,14 @@ DROP ROLE IF EXISTS lbokiau17;
 CREATE ROLE lbokiau17 SUPERUSER LOGIN PASSWORD 'Qamq=277';
 
 GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
-
+*/
 /*rhonore16 => utilisateur*/
 /*GRANT SELECT, INSERT ON SOIPL.utilisateurs TO rhonore16;
 GRANT SELECT ON SOIPL.tags TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON SOIPL.questions TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;*/
+
 
 /*GRANT POUR LES VUES*/
 /*GRANT SELECT ON SOIPL.getuser TO rhonore16;
@@ -65,7 +66,9 @@ GRANT SELECT ON SOIPL.getOwnerTransaction TO rhonore16;
 GRANT SELECT ON SOIPL.getOwnerReviews TO rhonore16;
 GRANT SELECT ON SOIPL.getOwnerSalesAndBids TO rhonore16;*/
 
---GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;
+
+/*GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;*/
+
 
 -- est-ce que ça doit etre le plus opti possible ou alors on peut metre un id pour ici la table status meme s’il y a 3 donnees
 CREATE TABLE SOIPL.statuts(
@@ -388,6 +391,17 @@ $$ LANGUAGE 'plpgsql';
 CREATE OR REPLACE VIEW SOIPL.view_toutes_questions_titre AS
 SELECT titre, date_creation, id_question, utilisateur_createur, date_derniere_edition, utilisateur_edition FROM SOIPL.questions ORDER BY date_creation;
 
+CREATE OR REPLACE VIEW SOIPL.view_toutes_questions AS 
+	SELECT id_question AS "id_question",
+		utilisateur_createur AS "utilisateur_createur",
+		date_creation AS "date_creation",
+		utilisateur_edition AS "utilisateur_edition",
+		date_derniere_edition AS "date_derniere_edition",
+		texte AS "texte",
+		titre AS "titre",
+		cloture AS "cloture"
+	FROM SOIPL.questions;
+
 --CREATE OR REPLACE VIEW SOIPL.selection_questions_posees_par_utilisateur(@id_utilisateur INT) AS
 --SELECT titre, utilisateur_createur, date_creation, utilisateur_edition, date_derniere_edition FROM SOIPL.questions WHERE @id_utilisateur = utilisateur_createur AND cloture = false ORDER BY date_creation;
 
@@ -431,6 +445,7 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
+
 CREATE OR REPLACE FUNCTION SOIPL.desactivation_compte_utilisateur(INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_utilisateur ALIAS FOR $1;

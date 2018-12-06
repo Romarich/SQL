@@ -38,7 +38,7 @@ public class Programme {
 			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT SOIPL.creation_nouvelle_question(?,?,?);" );
 			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
 			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT q.*, u.nom_utilisateur FROM SOIPL.questions q, SOIPL.utilisateurs u WHERE q.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
-			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions");
+			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions");
 			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score DESC");
 			this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
@@ -227,6 +227,7 @@ public class Programme {
             rs.close();
         } catch (Exception e) {
         	System.out.println("Vous n'avez pas encore posé de questions");
+        	e.printStackTrace();
 			menuAvecChoix();
         }
 		System.out.println("");
@@ -374,10 +375,7 @@ public class Programme {
 						se.printStackTrace();
 						System.out.println("erreur");
 					}
-					
 				break;
-				
-				
 			}
 		}
 		menuAvecChoix();
