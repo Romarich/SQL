@@ -18,6 +18,7 @@ public class Programme {
 	private PreparedStatement psDesactiverCompte;
 	private PreparedStatement psHistoriqueQuestions;
 	private PreparedStatement psHistoriqueReponses;
+	private PreparedStatement psListeUtilisateurs;
 	
 	public Programme(){
 		this.connection = connexionDB();
@@ -27,6 +28,7 @@ public class Programme {
 			this.psDesactiverCompte = connection.prepareStatement("SELECT SOIPL.desactivation_compte_utilisateur(?)");
 			this.psHistoriqueQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ? AND date_creation >= ? AND date_creation <= ?");
 			this.psHistoriqueReponses = connection.prepareStatement("SELECT * FROM SOIPL.responses WHERE id_utilisateur = ? AND date_heure >= ? AND date_heure <= ?");
+			this.psListeUtilisateurs = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -40,14 +42,15 @@ public class Programme {
 		System.out.println("|2. Augmentation forcee d'un compte.         |");
 		System.out.println("|3. Ajouter un tag.                          |");
 		System.out.println("|4. Historique d'un utilisateur.             |");
-		System.out.println("|5. Eteindre le programme.                   |");
+		System.out.println("|5. Afficher les utilisateurs.               |");
+		System.out.println("|6. Eteindre le programme.                   |");
 		System.out.println("----------------------------------------------");
 		int choix = 0;
 		
 		do {
 			System.out.print("Veuillez rentrer votre choix : ");
 			choix = scanner.nextInt();
-		}while(!(choix > 0 && choix < 6));
+		}while(!(choix > 0 && choix < 7));
 		
 		switch(choix) {
 			case 1:
@@ -63,6 +66,10 @@ public class Programme {
 				historiqueUtilisateur();
 				break;
 			case 5:
+				affichageUtilisateur();
+				menuAvecChoix();
+				break;
+			case 6:
 				fermerLeProgramme();
 				break;
 		}
@@ -82,6 +89,7 @@ public class Programme {
 	}
 
 	private void augmentationForcee() {
+		affichageUtilisateur();
 		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez augmenter le status :");
 		int idUtilisateur = scanner.nextInt();
 		System.out.println("Veuillez rentrer le status que vous souhaitez lui mettre :");
@@ -89,8 +97,12 @@ public class Programme {
 		try {
 			psAugmentationForcee.setInt(1, idUtilisateur);
 			psAugmentationForcee.setString(2, status);
-            ResultSet rs = psAugmentationForcee.executeQuery();
-            rs.close();
+            try (ResultSet rs = psAugmentationForcee.executeQuery()){
+            	
+            } catch(Exception e) {
+            	System.out.println(e);
+            }
+   
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -98,6 +110,7 @@ public class Programme {
 	}
 
 	private void desactiverCompte() {
+		affichageUtilisateur();
 		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez desactiver le compte :");
 		int idUtilisateur = scanner.nextInt();
 		try {
@@ -112,6 +125,7 @@ public class Programme {
 	}
 	
 	private void historiqueUtilisateur() {
+		affichageUtilisateur();
 		System.out.println("Veuillez rentrer l'id de l'utilisateur dont vous souhaitez afficher l'historique :");
 		int idUtilisateur = scanner.nextInt();
 		System.out.println("Veuillez rentrer la date de debut sous le format ('yyyy-MM-ddTHH:mm:ss.SSS'):");
@@ -155,6 +169,17 @@ public class Programme {
 		}
 		System.out.println();
 		menuAvecChoix();
+	}
+	
+	private void affichageUtilisateur() {
+		try {
+			ResultSet rs = psListeUtilisateurs.executeQuery();
+			while(rs.next()) {
+				System.out.println(rs.getInt(1) +". " + rs.getString(2) + "|" + rs.getString(4) + "|" + rs.getString(5) + "|" + rs.getInt(6) + "|" + rs.getBoolean(7));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Connection connexionDB() {
