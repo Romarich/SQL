@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import source.BCrypt;
@@ -25,6 +26,7 @@ public class Programme {
 	private PreparedStatement psUtilisateurPasDesactive;
 	private PreparedStatement psSelectionDeTousLesTags;
 	private PreparedStatement psSelectionQuestionParTag;
+	private PreparedStatement psVote;
 	
 	
 	public Programme(){
@@ -43,6 +45,7 @@ public class Programme {
 			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
 			this.psSelectionDeTousLesTags = connection.prepareStatement("SELECT * FROM SOIPL.tags");
 			this.psSelectionQuestionParTag = connection.prepareStatement("SELECT * FROM SOIPL.questions q, SOIPL.question_tag t WHERE t.id_tag = ? AND q.id_question = t.id_question");
+			this.psVote = connection.prepareStatement("SELECT SOIPL.creation_vote(?,?,?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -257,12 +260,13 @@ public class Programme {
 		}
 		
 		System.out.println("Réponses à la question :");
-		
+		HashMap<Integer,Integer> map = new HashMap<Integer, Integer>(); 
 		try {
 			psVisualiserReponses.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs2 = psVisualiserReponses.executeQuery();
 			System.out.println("----------------------------------------------");
 			while (rs2.next()) {
+				map.put(rs2.getInt(2), rs2.getInt(1));
             	System.out.println(rs2.getInt(2) + ". Réponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
                 System.out.println("\t" + rs2.getString(6));
                 System.out.println("Score de la réponse : " + rs2.getString(5));
@@ -308,7 +312,11 @@ public class Programme {
 					
 					try {
 						if(reponse.equals("P")) {
-							
+							System.out.println("Entrez le numéro de la réponse");
+							psVote.setInt(1, this.utilisateur);
+							psVote.setBoolean(2, true);
+							psVote.setInt(3, map.get((Integer.parseInt(scanner.nextLine()))));
+							psVote.executeQuery();
 						}else {
 							psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
 							psIntroductionNouvelleReponse.setString(2, reponse);
@@ -330,7 +338,11 @@ public class Programme {
 					
 					try {
 						if(reponse.equals("P") || reponse.equals("N")) {
-							
+							System.out.println("Entrez le numéro de la réponse");
+							psVote.setInt(1, this.utilisateur);
+							psVote.setBoolean(2, reponse.equals("P"));
+							psVote.setInt(3, map.get(Integer.parseInt(scanner.nextLine())));
+							psVote.executeQuery();
 						}else {
 							psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
 							psIntroductionNouvelleReponse.setString(2, reponse);
