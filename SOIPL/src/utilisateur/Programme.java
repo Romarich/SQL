@@ -327,8 +327,7 @@ public class Programme {
 							System.out.println("");
 						}
 					}catch(SQLException se) {
-						se.printStackTrace();
-						System.out.println("erreur");
+						System.out.println(se);
 					}
 				break;	
 				
@@ -353,8 +352,7 @@ public class Programme {
 							System.out.println("");
 						}
 					}catch(SQLException se) {
-						se.printStackTrace();
-						System.out.println("erreur");
+						System.out.println(se);
 					}
 				break;
 				

@@ -271,7 +271,7 @@ THEN
 	THEN
 		SELECT NEW.id_utilisateur FROM SOIPL.votes
 		INTO _id_utilisateur;
-		SELECT u.reputation FROM SOIPL.utilisateur u, SOIPL.votes v WHERE v.id_utilisateur LIKE NEW.id_utilisateur
+		SELECT u.reputation FROM SOIPL.utilisateurs u, SOIPL.votes v WHERE v.id_utilisateur = NEW.id_utilisateur
 		INTO _reputation;
 			
 		_reputation = _reputation+5;
@@ -283,6 +283,7 @@ THEN
 			UPDATE SOIPL.utilisateurs SET reputation = 100 WHERE id_utilisateur = _id_utilisateur;
 		END IF;
 	END IF;
+END IF;
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -292,6 +293,21 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER statut_maj_trigger AFTER INSERT ON SOIPL.votes FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.augmentation_reputation();
 
+CREATE OR REPLACE FUNCTION SOIPL.vote_pas_pour_soi_meme() RETURNS TRIGGER AS $$
+DECLARE 
+	_id_vote INTEGER;
+BEGIN	
+	IF EXISTS(SELECT * FROM SOIPL.reponses r, SOIPL.votes v WHERE r.id_utilisateur = v.id_utilisateur) 
+	THEN 
+		SELECT v.id_vote FROM SOIPL.reponses r, SOIPL.votes v WHERE r.id_utilisateur = v.id_utilisateur INTO _id_vote;
+		RAISE 'Tu ne peux pas voter pour toi même';
+		DELETE FROM SOIPL.votes WHERE id_vote = _id_vote;
+	END IF;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER verification_vote_pas_pour_soi_meme AFTER INSERT ON SOIPL.votes FOR EACH ROW 
+EXECUTE PROCEDURE SOIPL.vote_pas_pour_soi_meme();
 
 -- liste des autres triggers a faire :
 /*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
