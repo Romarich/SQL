@@ -51,21 +51,21 @@ CREATE ROLE lbokiau17 SUPERUSER LOGIN PASSWORD 'Qamq=277';
 GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
 
 /*rhonore16 => utilisateur*/
-GRANT SELECT, INSERT ON SOIPL.utilisateurs TO rhonore16;
+/*GRANT SELECT, INSERT ON SOIPL.utilisateurs TO rhonore16;
 GRANT SELECT ON SOIPL.tags TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON SOIPL.questions TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;*/
 
 /*GRANT POUR LES VUES*/
-GRANT SELECT ON SOIPL.getuser TO rhonore16;
+/*GRANT SELECT ON SOIPL.getuser TO rhonore16;
 GRANT SELECT ON SOIPL.getOwnerSales TO rhonore16;
 GRANT SELECT ON SOIPL.getOwnerBids TO rhonore16;
 GRANT SELECT ON SOIPL.getOwnerTransaction TO rhonore16;
 GRANT SELECT ON SOIPL.getOwnerReviews TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerSalesAndBids TO rhonore16;
+GRANT SELECT ON SOIPL.getOwnerSalesAndBids TO rhonore16;*/
 
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;
+--GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;
 
 -- est-ce que ça doit etre le plus opti possible ou alors on peut metre un id pour ici la table status meme s’il y a 3 donnees
 CREATE TABLE SOIPL.statuts(
@@ -182,7 +182,7 @@ _nom_statut VARCHAR(6);
 _seuil_avance INTEGER;
 _seuil_master INTEGER;
 BEGIN
-IF OLD.statut <> 'master'
+IF OLD.statut <> 'master' AND OLD.reputation <> NEW.reputation
 THEN
 	SELECT seuil FROM SOIPL.statuts WHERE nom_statut LIKE 'master'
 	INTO _seuil_master;
@@ -252,14 +252,17 @@ DECLARE
 _id_utilisateur INTEGER;
 _reputation INTEGER;
 BEGIN
-IF OLD.reputation <100
-THEN
-	SELECT NEW.id_utilisateur FROM SOIPL.votes
-	INTO _id_utilisateur;
-	SELECT u.reputation FROM SOIPL.utilisateur u, SOIPL.votes v WHERE v.id_utilisateur LIKE NEW.id_utilisateur
-	INTO _reputation;
-		
-	_reputation = _reputation+5;
+
+SELECT NEW.id_utilisateur FROM SOIPL.votes
+INTO _id_utilisateur;
+SELECT u.reputation FROM SOIPL.utilisateurs u, SOIPL.votes v WHERE v.id_utilisateur = NEW.id_utilisateur
+INTO _reputation;
+
+IF _reputation <100
+THEN		
+
+
+	_reputation = _reputation + 5;
 
 	IF _reputation<100
 	THEN
@@ -353,7 +356,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 */
-CREATE OR REPLACE FUNCTION SOIPL.creation_vote (INTEGER,BOOLEAN,INTEGER,INTEGER) RETURNS INTEGER AS $$
+CREATE OR REPLACE FUNCTION SOIPL.creation_vote (INTEGER,BOOLEAN,INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_utilisateur ALIAS FOR $1;
 	_positif ALIAS FOR $2;
@@ -428,7 +431,6 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
-SELECT SOIPL.augmentation_forcee_statut_utilisateur(1,'avancé')
 CREATE OR REPLACE FUNCTION SOIPL.desactivation_compte_utilisateur(INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_utilisateur ALIAS FOR $1;
