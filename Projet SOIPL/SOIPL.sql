@@ -242,33 +242,32 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
+CREATE TRIGGER verification_statut_diminution_pas_poss AFTER UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
 
 -- +5 en cas de vote ++ jamais + 100
 
 CREATE OR REPLACE FUNCTION SOIPL.augmentation_reputation() RETURNS TRIGGER AS $$
 DECLARE
-_id_utilisateur INTEGER;
-_reputation INTEGER;
+	_id_utilisateur INTEGER;
+	_reputation INTEGER;
 BEGIN
-IF OLD.reputation <100
-THEN
-	SELECT NEW.id_utilisateur FROM SOIPL.votes
-	INTO _id_utilisateur;
-	SELECT u.reputation FROM SOIPL.utilisateur u, SOIPL.votes v WHERE v.id_utilisateur LIKE NEW.id_utilisateur
-	INTO _reputation;
-		
-	_reputation = _reputation+5;
-
-	IF _reputation<100
+	IF OLD.reputation <100
 	THEN
-		UPDATE SOIPL.utilisateurs SET reputation = _reputation WHERE id_utilisateur = _id_utilisateur;
-	ELSE
-		UPDATE SOIPL.utilisateurs SET reputation = 100 WHERE id_utilisateur = _id_utilisateur;
-	END IF;
-END IF;
+		SELECT NEW.id_utilisateur FROM SOIPL.votes
+		INTO _id_utilisateur;
+		SELECT u.reputation FROM SOIPL.utilisateur u, SOIPL.votes v WHERE v.id_utilisateur LIKE NEW.id_utilisateur
+		INTO _reputation;
+			
+		_reputation = _reputation+5;
 
+		IF _reputation<100
+		THEN
+			UPDATE SOIPL.utilisateurs SET reputation = _reputation WHERE id_utilisateur = _id_utilisateur;
+		ELSE
+			UPDATE SOIPL.utilisateurs SET reputation = 100 WHERE id_utilisateur = _id_utilisateur;
+		END IF;
+	END IF;
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
