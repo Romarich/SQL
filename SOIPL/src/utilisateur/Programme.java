@@ -321,9 +321,7 @@ public class Programme {
 						se.printStackTrace();
 						System.out.println("erreur");
 					}
-					
-				break;
-					
+				break;	
 				
 				case "master":
 					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement, N pour voter négativement, pour une réponse");
@@ -391,7 +389,7 @@ public class Programme {
 			se.printStackTrace();
 		}
 		System.out.println("Veuillez choisir le numero du tag que vous souhaitez regarder");
-		int chiffre = scanner.nextInt();
+		int chiffre = Integer.parseInt(scanner.nextLine());
 		try {
 			psSelectionQuestionParTag.setInt(1, chiffre);
 			ResultSet rs = psSelectionQuestionParTag.executeQuery();
@@ -401,7 +399,6 @@ public class Programme {
 		}catch(SQLException se) {
 			se.printStackTrace();
 		}
-		//TODO erreur mais pk ?
 		menuAvecChoix();
 	}
 	

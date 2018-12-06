@@ -198,6 +198,30 @@ EXECUTE PROCEDURE SOIPL.statut_maj();
 UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 */
 
+-- liste des autres triggers a faire :
+CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
+DECLARE 
+	_statut VARCHAR(6);
+BEGIN	
+	SELECT statut FROM SOIPL.utilisateurs WHERE id_utilisateur = NEW.id_utilisateur INTO _statut;
+	IF _statut = 'master' AND NEW.statut <> 'master'
+	THEN
+		UPDATE SOIPL.utilisateurs SET statut = 'master' WHERE id_utilisateur = NEW.id_utilisateur;
+		RAISE 'On ne peut pas diminuer le statut d un utilisateur';
+	END IF;
+
+	IF _statut = 'avancé' AND NEW.statut = 'normal'
+	THEN
+		UPDATE SOIPL.utilisateurs SET statut = 'avancé' WHERE id_utilisateur = NEW.id_utilisateur;
+		RAISE 'On ne peut pas diminuer le statut d un utilisateur';
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
+EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
+
 -- +5 en cas de vote ++ jamais + 100
 
 CREATE OR REPLACE FUNCTION SOIPL.augmentation_reputation() RETURNS TRIGGER AS $$
@@ -362,11 +386,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-
-
-
-
-
 /*ADMINISTRATEUR*/
 CREATE OR REPLACE FUNCTION SOIPL.creation_nouveau_tag(VARCHAR) RETURNS INTEGER AS $$
 DECLARE
@@ -386,7 +405,7 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
-
+SELECT SOIPL.augmentation_forcee_statut_utilisateur(1,'avancé')
 CREATE OR REPLACE FUNCTION SOIPL.desactivation_compte_utilisateur(INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_utilisateur ALIAS FOR $1;
