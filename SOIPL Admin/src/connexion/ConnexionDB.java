@@ -18,7 +18,7 @@ public class ConnexionDB {
 	        connection = DriverManager.getConnection(
 	           //"jdbc:postgresql://localhost:5432/SOIPL","postgres", "azerty1.");
 	        	"jdbc:postgresql://172.24.2.6:5432/dblbokiau17","lbokiau17", "Qamq=277");
-	        	//"jdbc:postgresql://localhost:5432/SOIPL","dbrhonore16", "mdp");
+	        //"jdbc:postgresql://172.24.2.6:5432/dbrhonore16","rhonore16", ")XUE7Ha");
 	    }
 	    catch(Exception e) {
 	        System.out.println(e);
