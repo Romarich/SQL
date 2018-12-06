@@ -111,7 +111,7 @@ INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('avancé',50);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',100);
 
 INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('leekA','$2a$10$uOyYzAH7RPK98eWRLyYKR.ivX0/VA3j26Kyj6CClIjIgeT6/6nCuC','leekA@gmail.com');
-INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('leekB','$2a$10$BYDnAwC4UzTDH.01jVIVy.vacyBxz9zl3mE54x9CppaAyImwdvBTa','leekB@gmail.com');
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email, statut) VALUES ('leekB','$2a$10$BYDnAwC4UzTDH.01jVIVy.vacyBxz9zl3mE54x9CppaAyImwdvBTa','leekB@gmail.com', 'avancé');
 INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('leekC','$2a$10$HrYEp8gtOWyNpxJsBauzy.psAjzaWvJ5oLiImwow5ahV/cXR6sW8.','leekC@gmail.com');
 
 INSERT INTO SOIPL.tags (tag) VALUES ('questions speciales');
@@ -152,8 +152,6 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER verification_date_trigger BEFORE INSERT
 ON SOIPL.reponses EXECUTE PROCEDURE SOIPL.verif_date_reponses_ulterieures_questions();
 
-/*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
-
 -- le fait de pas pouvoir faire redescendre les droits ne fonctionnent pas
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
@@ -167,7 +165,7 @@ THEN
 	INTO _seuil_master;
 	SELECT seuil FROM SOIPL.statuts WHERE nom_statut LIKE 'avancé'
 	INTO _seuil_avance;
-	IF NEW.reputation > _seuil_avance AND NEW.reputation < _seuil_master
+	IF NEW.reputation >= _seuil_avance AND NEW.reputation < _seuil_master
 	THEN 
 		_nom_statut = 'avancé';
 	END IF;
@@ -179,10 +177,10 @@ THEN
 
 	SELECT COALESCE(s.nom_statut,NULL) FROM SOIPL.statuts s, SOIPL.utilisateurs u
 	WHERE u.id_utilisateur = NEW.id_utilisateur
-	AND u.reputation >= (SELECT MAX(s1.seuil) FROM SOIPL.statuts s1 WHERE s1.seuil < u.reputation)
+	AND u.reputation >= (SELECT MAX(s1.seuil) FROM SOIPL.statuts s1 WHERE s1.seuil <= u.reputation)
 	INTO _nom_statut;
 
-	IF OLD.statut <> _nom_statut
+	IF NEW.statut <> _nom_statut
 	THEN
 		UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur;
 	END IF;
@@ -200,8 +198,44 @@ EXECUTE PROCEDURE SOIPL.statut_maj();
 UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 */
 
--- liste des autres triggers a faire :
+-- +5 en cas de vote ++ jamais + 100
 
+CREATE OR REPLACE FUNCTION SOIPL.augmentation_reputation() RETURNS TRIGGER AS $$
+DECLARE
+_id_utilisateur INTEGER;
+_reputation INTEGER;
+BEGIN
+IF OLD.reputation <100
+THEN
+	SELECT NEW.id_utilisateur FROM SOIPL.votes
+	INTO _id_utilisateur;
+	SELECT u.reputation FROM SOIPL.utilisateur u, SOIPL.votes v WHERE v.id_utilisateur LIKE NEW.id_utilisateur
+	INTO _reputation;
+		
+	_reputation = _reputation+5;
+
+	IF _reputation<100
+	THEN
+		UPDATE SOIPL.utilisateurs SET reputation = _reputation WHERE id_utilisateur = _id_utilisateur;
+	ELSE
+		UPDATE SOIPL.utilisateurs SET reputation = 100 WHERE id_utilisateur = _id_utilisateur;
+	END IF;
+END IF;
+
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+--DROP TRIGGER statut_maj_trigger ON SOIPL.utilisateurs; A retirer apres
+CREATE TRIGGER statut_maj_trigger AFTER INSERT ON SOIPL.votes FOR EACH ROW
+EXECUTE PROCEDURE SOIPL.augmentation_reputation();
+
+
+-- liste des autres triggers a faire :
+/*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
+/*FAIRE LES TRIGGER POUR BLOQUER LA REPUTATION A 100*/
+/* +5 POINT QUAND ON VOTE*/
 
 -- liste procedure a faire :
 /*

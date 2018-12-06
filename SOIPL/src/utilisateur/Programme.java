@@ -26,6 +26,7 @@ public class Programme {
 	private PreparedStatement psSelectionDeTousLesTags;
 	private PreparedStatement psSelectionQuestionParTag;
 	
+	
 	public Programme(){
 		this.connection = connexionDB();	
 		try {
@@ -325,7 +326,25 @@ public class Programme {
 					
 				
 				case "master":
-					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse, N pour voter négativement pour une réponse");
+					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement, N pour voter négativement, pour une réponse");
+					reponse = scanner.nextLine();
+					
+					try {
+						if(reponse.equals("P") || reponse.equals("N")) {
+							
+						}else {
+							psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
+							psIntroductionNouvelleReponse.setString(2, reponse);
+							psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
+							psIntroductionNouvelleReponse.executeQuery();
+							System.out.println("");
+							System.out.println("Merci !");
+							System.out.println("");
+						}
+					}catch(SQLException se) {
+						se.printStackTrace();
+						System.out.println("erreur");
+					}
 				break;
 				
 				default : 
