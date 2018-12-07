@@ -158,15 +158,18 @@ THEN
 
 	SELECT COALESCE(s.nom_statut,NULL) FROM SOIPL.statuts s, SOIPL.utilisateurs u
 	WHERE u.id_utilisateur = NEW.id_utilisateur
-	AND u.reputation >= (SELECT MAX(s1.seuil) FROM SOIPL.statuts s1 WHERE s1.seuil <= u.reputation)
 	INTO _nom_statut;
 
-	IF NEW.statut <> _nom_statut
+	IF NEW.statut <> _nom_statut AND _nom_statut <> 'master'
 	THEN
-		UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur;
+		IF _nom_statut = 'avancé' AND NEW.statut = 'master'
+		THEN
+			UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur;
+		ELSE
+			RAISE 'On ne peut pas diminuer le statut d un utilisateur';
+		END IF;
 	END IF;
 END IF;
-
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -180,6 +183,7 @@ UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 */
 
 -- liste des autres triggers a faire :
+
 CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
 DECLARE 
 	_statut VARCHAR(6);
@@ -200,6 +204,7 @@ END;
 $$ LANGUAGE 'plpgsql';
  CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
+
 
 
 -- +5 en cas de vote ++ jamais + 100
@@ -249,12 +254,28 @@ BEGIN
 		RAISE 'Tu ne peux pas voter pour toi même';
 		DELETE FROM SOIPL.votes WHERE id_vote = _id_vote;
 	END IF;
+	RETURN NULL;
 END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE TRIGGER verification_vote_pas_pour_soi_meme AFTER INSERT ON SOIPL.votes FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.vote_pas_pour_soi_meme();
 
+
+CREATE OR REPLACE FUNCTION SOIPL.vote_negatif_et_verif_master() RETURNS TRIGGER AS $$
+DECLARE 
+BEGIN	
+	IF EXISTS(SELECT * FROM SOIPL.votes v, SOIPL.utilisateurs u WHERE v.id_vote = NEW.id_vote AND u.id_utilisateur = v.id_utilisateur AND u.statut='master')
+	THEN 
+		RAISE 'Tu ne peux pas voter negativement car tu n es pas master';
+		DELETE FROM SOIPL.votes v WHERE v.id_vote = NEW.id_vote;
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER vote_negatif_et_verif_master AFTER INSERT ON SOIPL.votes FOR EACH ROW 
+EXECUTE PROCEDURE SOIPL.vote_negatif_et_verif_master();
 -- liste des autres triggers a faire :
 /*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
 /*FAIRE LES TRIGGER POUR BLOQUER LA REPUTATION A 100*/
@@ -456,8 +477,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*GRANT*/
-
+/*
 GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
 GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
 
@@ -475,3 +495,4 @@ GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.reponses_id_reponse_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.questions_id_question_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.tags_id_tag_seq TO rhonore16;
+*/
