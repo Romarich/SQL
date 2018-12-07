@@ -2,24 +2,24 @@
 --TODO : TRIGGER 
 
 --TODO : APPLICATION UTILISATEUR
--- ╔ vérifier si utilisateur non désactivé à la connexion (trigger)
+-- ╔ vérifier si utilisateur non désactivé à la connexion (trigger) --pense paas finalement
 -- ╠ ajout tag questions (insert) nam 
 -- ╠ selection questions posées ou répondues (query) nam ┐
--- ╠ selection toutes les questions (query) nam DONE     ├ afficher date, num, utilisateur, date edit, util edit, titre
+-- ╠ FAIT :: selection toutes les questions (query) nam  ├ afficher date, num, utilisateur, date edit, util edit, titre
 -- ╠ selection question liée à un tag (query)  nam       ┘
--- ╠ selection d'une question parmi celles affichées (par num ?) + affichage réponses triées (num date auteur score contenu) nam DONE
--- ╠══╦ répondre (max 200 char) nam DONE
--- ║  ╠ voter am (24h pour a, illimité pour m) 1/2 DONE
--- ║  ╠ editer question ou reponse am DONE
+-- ╠ FAIT :: selection d'une question parmi celles affichées (par num ?) + affichage réponses triées (num date auteur score contenu) nam
+-- ╠══╦ FAIT :: répondre (max 200 char) nam
+-- ║  ╠ FAIT/2 :: voter am (24h pour a, illimité pour m)
+-- ║  ╠ FAIT :: editer question ou reponse am
 -- ║  ╠ ajout tag am 
 -- ╠══╩ cloturer question m 
--- ╚ reputation augmente → possible changement statut DONE 
+-- ╚ FAIT :: reputation augmente → possible changement statut 
 
 --TODO : APPLICATION CENTRALE 
--- ╔ FAIT :: desactiver compte (enlever connexion) DONE
--- ╠ FAIT :: augmentation forcée de statut DONE/2
--- ╠ FAIT :: consulter historique utilisateur DONE
--- ╚ FAIT :: ajouter tag. DONE
+-- ╔ FAIT :: desactiver compte (enlever connexion)
+-- ╠ FAIT/2 :: augmentation forcée de statut
+-- ╠ FAIT :: consulter historique utilisateur
+-- ╚ FAIT :: ajouter tag
 
 DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
@@ -318,7 +318,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*EXEC SOIPL.inscription_utilisateur("test@test.com","login","password");*/
+/*EXEC SOIPL.inscription_utilisateur('test@test.com','login','password');*/
 -- regarder comment executer une procedure
 
 CREATE OR REPLACE FUNCTION SOIPL.creation_nouvelle_question(INTEGER,VARCHAR,VARCHAR) RETURNS INTEGER AS $$
