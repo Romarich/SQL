@@ -41,35 +41,6 @@ DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
 CREATE SCHEMA SOIPL;
 
-/*
-DROP ROLE IF EXISTS rhonore16;
-CREATE ROLE rhonore16 LOGIN PASSWORD ')XUE7Ha';
-
-DROP ROLE IF EXISTS lbokiau17;
-CREATE ROLE lbokiau17 SUPERUSER LOGIN PASSWORD 'Qamq=277';
-
-GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
-*/
-/*rhonore16 => utilisateur*/
-/*GRANT SELECT, INSERT ON SOIPL.utilisateurs TO rhonore16;
-GRANT SELECT ON SOIPL.tags TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON SOIPL.questions TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;*/
-
-
-/*GRANT POUR LES VUES*/
-/*GRANT SELECT ON SOIPL.getuser TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerSales TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerBids TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerTransaction TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerReviews TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerSalesAndBids TO rhonore16;*/
-
-
-/*GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;*/
-
-
 -- est-ce que ça doit etre le plus opti possible ou alors on peut metre un id pour ici la table status meme s’il y a 3 donnees
 CREATE TABLE SOIPL.statuts(
 	nom_statut VARCHAR(6) CHECK (nom_statut LIKE 'normal' OR nom_statut LIKE 'avancé' OR nom_statut LIKE 'master') PRIMARY KEY,
@@ -478,3 +449,21 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
+
+
+/*GRANT*/
+GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
+GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
+
+GRANT SELECT, INSERT ON TABLE SOIPL.utilisateurs TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.questions TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;
+GRANT SELECT ON TABLE SOIPL.tags TO rhonore16;
+GRANT SELECT ON TABLE SOIPL.question_tag TO rhonore16;
+
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.utilisateurs_id_utilisateur_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.reponses_id_reponse_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.questions_id_question_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.tags_id_tag_seq TO rhonore16;
