@@ -21,54 +21,9 @@
 -- ╠ FAIT :: consulter historique utilisateur
 -- ╚ FAIT :: ajouter tag.
 
-
 DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
--- si on souhaite rajouter des droit en plus pour qu'il puisse faire des create table dans la db 
---GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
---GRANT USAGE ON SCHEMA SOIPL TO rhonore16; 	-- entre parentheses donc a voir
-
---creer des role avant
-
---GRANT SELECT, INSERT, UPDATE, DELETE ON SOIPL.questions TO dbrhonore16;
--- REVOKE ALL ON SOIPL.questions FROM dbrhonore16; -- pour supprimer son acces a la db
-
---grant select,insert, update delete on SOIPL.tables to rhonore16
--- grant select on SOIPL.getUser TO rhonore16 => pour les vues.
-
---GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;
-
-
 CREATE SCHEMA SOIPL;
-
-/*
-DROP ROLE IF EXISTS rhonore16;
-CREATE ROLE rhonore16 LOGIN PASSWORD ')XUE7Ha';
-
-DROP ROLE IF EXISTS lbokiau17;
-CREATE ROLE lbokiau17 SUPERUSER LOGIN PASSWORD 'Qamq=277';
-
-GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
-*/
-/*rhonore16 => utilisateur*/
-/*GRANT SELECT, INSERT ON SOIPL.utilisateurs TO rhonore16;
-GRANT SELECT ON SOIPL.tags TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON SOIPL.questions TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
-GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;*/
-
-
-/*GRANT POUR LES VUES*/
-/*GRANT SELECT ON SOIPL.getuser TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerSales TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerBids TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerTransaction TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerReviews TO rhonore16;
-GRANT SELECT ON SOIPL.getOwnerSalesAndBids TO rhonore16;*/
-
-
-/*GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA SOIPL TO rhonore16;*/
-
 
 -- est-ce que ça doit etre le plus opti possible ou alors on peut metre un id pour ici la table status meme s’il y a 3 donnees
 CREATE TABLE SOIPL.statuts(
@@ -235,8 +190,7 @@ BEGIN
 		UPDATE SOIPL.utilisateurs SET statut = 'master' WHERE id_utilisateur = NEW.id_utilisateur;
 		RAISE 'On ne peut pas diminuer le statut d un utilisateur';
 	END IF;
-
-	IF _statut = 'avancé' AND NEW.statut = 'normal'
+ 	IF _statut = 'avancé' AND NEW.statut = 'normal'
 	THEN
 		UPDATE SOIPL.utilisateurs SET statut = 'avancé' WHERE id_utilisateur = NEW.id_utilisateur;
 		RAISE 'On ne peut pas diminuer le statut d un utilisateur';
@@ -244,9 +198,9 @@ BEGIN
 	RETURN NEW;
 END;
 $$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER verification_statut_diminution_pas_poss AFTER UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
+ CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
+
 
 -- +5 en cas de vote ++ jamais + 100
 
@@ -260,13 +214,6 @@ SELECT NEW.id_utilisateur FROM SOIPL.votes
 INTO _id_utilisateur;
 SELECT u.reputation FROM SOIPL.utilisateurs u, SOIPL.votes v WHERE v.id_utilisateur = NEW.id_utilisateur
 INTO _reputation;
-
-IF _reputation <100
-THEN		
-
-
-	_reputation = _reputation + 5;
-
 	IF _reputation<100
 	THEN
 		SELECT NEW.id_utilisateur FROM SOIPL.votes
@@ -283,7 +230,6 @@ THEN
 			UPDATE SOIPL.utilisateurs SET reputation = 100 WHERE id_utilisateur = _id_utilisateur;
 		END IF;
 	END IF;
-END IF;
 RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -436,6 +382,37 @@ CREATE OR REPLACE VIEW SOIPL.view_toutes_questions AS
 
 -- a faire des raises.
 -- attention il ne faut pas de IF dans les procedures simple !! ==> il faut mettre dans des triggers
+CREATE OR REPLACE FUNCTION SOIPL.edition_question (VARCHAR,INTEGER, INTEGER) RETURNS INTEGER AS $$
+DECLARE
+	_texte ALIAS FOR $1;
+	_id_utilisateur ALIAS FOR $2;
+	_id_question ALIAS FOR $3;
+	
+BEGIN
+	UPDATE SOIPL.questions
+	SET utilisateur_edition = _id_utilisateur, 
+	texte = _texte,
+	date_derniere_edition = CURRENT_TIMESTAMP
+	WHERE id_question = _id_question;
+	RETURN 1;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION SOIPL.edition_titre_question (VARCHAR,INTEGER, INTEGER) RETURNS INTEGER AS $$
+DECLARE
+	_titre ALIAS FOR $1;
+	_id_utilisateur ALIAS FOR $2;
+	_id_question ALIAS FOR $3;
+	
+BEGIN
+	UPDATE SOIPL.questions
+	SET utilisateur_edition = _id_utilisateur, 
+	titre = _titre,
+	date_derniere_edition = CURRENT_TIMESTAMP
+	WHERE id_question = _id_question;
+	RETURN 1;
+END;
+$$ LANGUAGE 'plpgsql';
 
 
 /*SELECTIONS DIVERSES*/
@@ -478,3 +455,23 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
+
+/*
+GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
+GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
+
+GRANT SELECT, INSERT ON TABLE SOIPL.utilisateurs TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.questions TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;
+GRANT SELECT ON TABLE SOIPL.tags TO rhonore16;
+GRANT SELECT ON TABLE SOIPL.question_tag TO rhonore16;
+
+GRANT SELECT ON SOIPL.view_toutes_questions TO rhonore16;
+
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.utilisateurs_id_utilisateur_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.reponses_id_reponse_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.questions_id_question_seq TO rhonore16;
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.tags_id_tag_seq TO rhonore16;
+*/

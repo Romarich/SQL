@@ -16,10 +16,10 @@ public class ConnexionDB {
 	        Class.forName("org.postgresql.Driver");
 	        connection = null;
 	        connection = DriverManager.getConnection(
-	        	"jdbc:postgresql://localhost:5432/SOIPL","postgres", "azerty1.");
+	        	//"jdbc:postgresql://localhost:5432/SOIPL","postgres", "azerty1.");
 	        	//"jdbc:postgresql://localhost:5432/postgres","postgres", "26qy68o6P1");
-	        	//"jdbc:postgresql://172.24.2.6:5432/dblbokiau17","lbokiau17", "Qamq=277");
-	        	//"jdbc:postgresql://172.24.2.6:5432/dbrhonore16","rhonore16", ")XUE7Ha");
+	        	"jdbc:postgresql://172.24.2.6:5432/dblbokiau17","lbokiau17", "Qamq=277");
+	        	//"jdbc:postgresql://172.24.2.6:5432/dblbokiau17","rhonore16", ")XUE7Ha");
 	    }
 	    catch(Exception e) {
 	        System.out.println(e);

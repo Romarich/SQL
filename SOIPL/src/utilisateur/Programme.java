@@ -21,12 +21,14 @@ public class Programme {
 	private PreparedStatement psVisualiserQuestionsPoseesSpecifiqueId;
 	private PreparedStatement psVisualiserToutesLesQuestions;
 	private PreparedStatement psVisualiserReponses;
-	private PreparedStatement psVisualiserInformationsUtilisateur;
+	//private PreparedStatement psVisualiserInformationsUtilisateur;
 	private PreparedStatement psIntroductionNouvelleReponse;
 	private PreparedStatement psUtilisateurPasDesactive;
 	private PreparedStatement psSelectionDeTousLesTags;
 	private PreparedStatement psSelectionQuestionParTag;
 	private PreparedStatement psVote;
+	private PreparedStatement psEditionQuestion;
+	private PreparedStatement psEditionTitreQuestion;
 	
 	
 	public Programme(){
@@ -40,12 +42,14 @@ public class Programme {
 			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT q.*, u.nom_utilisateur FROM SOIPL.questions q, SOIPL.utilisateurs u WHERE q.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions");
 			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score DESC");
-			this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
+			//this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
 			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
 			this.psSelectionDeTousLesTags = connection.prepareStatement("SELECT * FROM SOIPL.tags");
 			this.psSelectionQuestionParTag = connection.prepareStatement("SELECT * FROM SOIPL.questions q, SOIPL.question_tag t WHERE t.id_tag = ? AND q.id_question = t.id_question");
 			this.psVote = connection.prepareStatement("SELECT SOIPL.creation_vote(?,?,?)");
+			this.psEditionQuestion = connection.prepareStatement("SELECT SOIPL.edition_question(?,?,?)");
+			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -247,7 +251,7 @@ public class Programme {
                 System.out.println("\t" + rs1.getString(6));
                 System.out.print(rs1.getString(3));
                 if(rs1.getString(4) != null) {
-                	System.out.println(", dernière edition :" + rs1.getString(4) + " par " + rs1.getString(5));
+                	System.out.println(", dernière edition :" + rs1.getString(5) + " par " + rs1.getString(4));
                 }else {
                 	System.out.println();
                 }
@@ -276,105 +280,77 @@ public class Programme {
 		}catch(SQLException se) {
 		
 		}
-		String statut = "";
-		
-		try {
-			psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
-			ResultSet rs3 = psVisualiserInformationsUtilisateur.executeQuery();
-			while (rs3.next()) {
-				statut = rs3.getString(5);
-			}
-		}catch(SQLException se) {
-		
-		}
-		System.out.print("Souhaitez vous répondre à la question ");
-		if("avancé".equals(statut) || "master".equals(statut)) {
-			System.out.print(" ou voter ");
-		}
-		System.out.println("? (O/N)");
+
+		System.out.println("Que souhaitez-vous faire ?");
+		System.out.println("     > Répondre (R)");
+		System.out.println("     > Voter (V)");
+		System.out.println("     > Editer (E)");
+		System.out.println("     > Quitter (Q)");
 		String rep = scanner.nextLine();
-		if("O".equals(rep)) {
-			
+		
+		switch(rep) {
+		
+		case "R" : 
 			try {
-				psVisualiserInformationsUtilisateur.setInt(1, this.utilisateur);
-				ResultSet rs3 = psVisualiserInformationsUtilisateur.executeQuery();
-				while (rs3.next()) {
-					statut = rs3.getString(5);
+				System.out.println("Entrez votre réponse");
+				String reponse = scanner.nextLine();
+				psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
+				psIntroductionNouvelleReponse.setString(2, reponse);
+				psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
+				psIntroductionNouvelleReponse.executeQuery();
+				System.out.println("");
+				System.out.println("Merci !");
+				System.out.println("");
+			}catch(SQLException se) {
+				System.out.println(se);
+			}
+			break;
+		
+		case "V" :
+			String vote = "P";
+			try{
+				System.out.println("voulez- vous voter positivement (P) ou négativement (N) ? ");
+				vote = scanner.nextLine();
+				System.out.println("Entrez le numéro de la réponse");
+				psVote.setInt(1, this.utilisateur);
+				psVote.setBoolean(2, vote.equals("P"));
+				psVote.setInt(3, map.get((Integer.parseInt(scanner.nextLine()))));
+				psVote.executeQuery();
+			}catch(SQLException se) {
+				System.out.println(se);
+			}
+			break;
+	
+		case "E" :
+			try {
+				System.out.println("Voulez vous modifier le titre (T) ou le corps de la question (Q) ?");
+				String modification = scanner.nextLine();
+				if(modification.equals("Q")) {
+				System.out.println("Entrez votre modification");
+				String reponse = scanner.nextLine();
+				psEditionQuestion.setInt(3, choixVisualisationQuestionSpecifique);
+				psEditionQuestion.setString(1, reponse);
+				psEditionQuestion.setInt(2, this.utilisateur);
+				psEditionQuestion.executeQuery();
+				System.out.println("");
+				System.out.println("Merci !");
+				System.out.println("");
+				}
+				if(modification.equals("T")) {
+				System.out.println("Entrez le nouveau titre");
+				String reponse = scanner.nextLine();
+				psEditionTitreQuestion.setInt(3, choixVisualisationQuestionSpecifique);
+				psEditionTitreQuestion.setString(1, reponse);
+				psEditionTitreQuestion.setInt(2, this.utilisateur);
+				psEditionTitreQuestion.executeQuery();
+				System.out.println("");
+				System.out.println("Merci !");
+				System.out.println("");
 				}
 			}catch(SQLException se) {
-			
+				System.out.println(se);
 			}
-			String reponse;
-			switch(statut) {
-				case "avancé":
-					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement pour une réponse");
-					reponse = scanner.nextLine();
-					
-					try {
-						if(reponse.equals("P")) {
-							System.out.println("Entrez le numéro de la réponse");
-							psVote.setInt(1, this.utilisateur);
-							psVote.setBoolean(2, true);
-							psVote.setInt(3, map.get((Integer.parseInt(scanner.nextLine()))));
-							psVote.executeQuery();
-						}else {
-							psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
-							psIntroductionNouvelleReponse.setString(2, reponse);
-							psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
-							psIntroductionNouvelleReponse.executeQuery();
-							System.out.println("");
-							System.out.println("Merci !");
-							System.out.println("");
-						}
-					}catch(SQLException se) {
-						System.out.println(se);
-					}
-				break;	
-				
-				case "master":
-					System.out.println("Entrez votre réponse, ou tapez P pour voter positivement, N pour voter négativement, pour une réponse");
-					reponse = scanner.nextLine();
-					
-					try {
-						if(reponse.equals("P") || reponse.equals("N")) {
-							System.out.println("Entrez le numéro de la réponse");
-							psVote.setInt(1, this.utilisateur);
-							psVote.setBoolean(2, reponse.equals("P"));
-							psVote.setInt(3, map.get(Integer.parseInt(scanner.nextLine())));
-							psVote.executeQuery();
-						}else {
-							psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
-							psIntroductionNouvelleReponse.setString(2, reponse);
-							psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
-							psIntroductionNouvelleReponse.executeQuery();
-							System.out.println("");
-							System.out.println("Merci !");
-							System.out.println("");
-						}
-					}catch(SQLException se) {
-						System.out.println(se);
-					}
-				break;
-				
-				default : 
-					System.out.println("Entrez votre réponse : ");
-					scanner.reset();
-					reponse = scanner.nextLine();
-							
-					try {
-						psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
-						psIntroductionNouvelleReponse.setString(2, reponse);
-						psIntroductionNouvelleReponse.setInt(3, this.utilisateur);
-						psIntroductionNouvelleReponse.executeQuery();
-						System.out.println("");
-						System.out.println("Merci !");
-						System.out.println("");
-					}catch(SQLException se) {
-						se.printStackTrace();
-						System.out.println("erreur");
-					}
-				break;
-			}
+			break;
 		}
 		menuAvecChoix();
 	}
@@ -439,6 +415,9 @@ public class Programme {
 			psVisualiserQuestionsPoseesSpecifiqueId.close();
 			psVisualiserToutesLesQuestions.close();
 			psVisualiserReponses.close();
+			psVote.close();
+			psEditionQuestion.close();
+			psEditionTitreQuestion.close();
 			scanner.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
