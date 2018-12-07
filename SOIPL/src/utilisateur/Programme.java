@@ -400,7 +400,6 @@ public class Programme {
             }
             rs.close();
         } catch (Exception e) {
-        	System.out.println("ici");
             e.printStackTrace();
         }
 	}

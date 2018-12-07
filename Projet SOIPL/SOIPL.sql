@@ -267,7 +267,7 @@ DECLARE
 BEGIN	
 	IF EXISTS(SELECT * FROM SOIPL.votes v, SOIPL.utilisateurs u WHERE v.id_vote = NEW.id_vote AND u.id_utilisateur = v.id_utilisateur AND u.statut='master')
 	THEN 
-		RAISE 'Tu ne peux pas voter negativement car tu n es pas master';
+		RAISE 'Tu ne peux pas voter negativement car tu n''es pas master';
 		DELETE FROM SOIPL.votes v WHERE v.id_vote = NEW.id_vote;
 	END IF;
 	RETURN NULL;
