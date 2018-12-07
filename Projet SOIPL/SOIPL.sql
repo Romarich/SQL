@@ -456,7 +456,8 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*
+/*GRANT*/
+
 GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
 GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
 
@@ -474,4 +475,3 @@ GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.reponses_id_reponse_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.questions_id_question_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.tags_id_tag_seq TO rhonore16;
-*/
