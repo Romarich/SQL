@@ -1,25 +1,25 @@
-﻿--TODO : GRANT
---TODO : TRIGGER
+﻿--TODO : GRANT DONE
+--TODO : TRIGGER 
 
 --TODO : APPLICATION UTILISATEUR
 -- ╔ vérifier si utilisateur non désactivé à la connexion (trigger)
--- ╠ ajout tag questions (insert) nam                      
+-- ╠ ajout tag questions (insert) nam 
 -- ╠ selection questions posées ou répondues (query) nam ┐
--- ╠ selection toutes les questions (query) nam          ├ afficher date, num, utilisateur, date edit, util edit, titre
+-- ╠ selection toutes les questions (query) nam DONE     ├ afficher date, num, utilisateur, date edit, util edit, titre
 -- ╠ selection question liée à un tag (query)  nam       ┘
--- ╠ selection d'une question parmi celles affichées (par num ?) + affichage réponses triées (num date auteur score contenu) nam
--- ╠══╦ répondre (max 200 char) nam
--- ║  ╠ voter am (24h pour a, illimité pour m)
--- ║  ╠ editer question ou reponse am
--- ║  ╠ ajout tag am
--- ╠══╩ cloturer question m
--- ╚ reputation augmente → possible changement statut
+-- ╠ selection d'une question parmi celles affichées (par num ?) + affichage réponses triées (num date auteur score contenu) nam DONE
+-- ╠══╦ répondre (max 200 char) nam DONE
+-- ║  ╠ voter am (24h pour a, illimité pour m) 1/2 DONE
+-- ║  ╠ editer question ou reponse am DONE
+-- ║  ╠ ajout tag am 
+-- ╠══╩ cloturer question m 
+-- ╚ reputation augmente → possible changement statut DONE 
 
---TODO : APPLICATION CENTRALE
--- ╔ FAIT :: desactiver compte (enlever connexion)
--- ╠ FAIT :: augmentation forcée de statut 
--- ╠ FAIT :: consulter historique utilisateur
--- ╚ FAIT :: ajouter tag.
+--TODO : APPLICATION CENTRALE 
+-- ╔ FAIT :: desactiver compte (enlever connexion) DONE
+-- ╠ FAIT :: augmentation forcée de statut DONE/2
+-- ╠ FAIT :: consulter historique utilisateur DONE
+-- ╚ FAIT :: ajouter tag. DONE
 
 DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
@@ -380,7 +380,15 @@ $$ LANGUAGE 'plpgsql';
 -- ou alors faite un return view ?? ou return records
 
 CREATE OR REPLACE VIEW SOIPL.view_toutes_questions_titre AS
-SELECT titre, date_creation, id_question, utilisateur_createur, date_derniere_edition, utilisateur_edition FROM SOIPL.questions ORDER BY date_creation;
+	SELECT  q.titre,
+		q.date_creation,
+		q.id_question,
+		q.utilisateur_createur,
+		q.date_derniere_edition,
+		q.utilisateur_edition
+	FROM SOIPL.questions q, SOIPL.reponses r
+	WHERE r.id_question = q.id_question
+	ORDER BY q.date_creation;
 
 CREATE OR REPLACE VIEW SOIPL.view_toutes_questions AS 
 	SELECT id_question AS "id_question",
@@ -393,6 +401,7 @@ CREATE OR REPLACE VIEW SOIPL.view_toutes_questions AS
 		cloture AS "cloture"
 	FROM SOIPL.questions;
 
+	
 --CREATE OR REPLACE VIEW SOIPL.selection_questions_posees_par_utilisateur(@id_utilisateur INT) AS
 --SELECT titre, utilisateur_createur, date_creation, utilisateur_edition, date_derniere_edition FROM SOIPL.questions WHERE @id_utilisateur = utilisateur_createur AND cloture = false ORDER BY date_creation;
 
@@ -488,6 +497,7 @@ GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;
 GRANT SELECT ON TABLE SOIPL.tags TO rhonore16;
 GRANT SELECT ON TABLE SOIPL.question_tag TO rhonore16;
 
+GRANT SELECT ON SOIPL.view_toutes_questions_titre TO rhonore16;
 GRANT SELECT ON SOIPL.view_toutes_questions TO rhonore16;
 
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.utilisateurs_id_utilisateur_seq TO rhonore16;

@@ -29,7 +29,7 @@ public class Programme {
 	private PreparedStatement psVote;
 	private PreparedStatement psEditionQuestion;
 	private PreparedStatement psEditionTitreQuestion;
-	
+	private PreparedStatement psVisualiserQuestionsRepondue;
 	
 	public Programme(){
 		this.connection = connexionDB();	
@@ -50,6 +50,7 @@ public class Programme {
 			this.psVote = connection.prepareStatement("SELECT SOIPL.creation_vote(?,?,?)");
 			this.psEditionQuestion = connection.prepareStatement("SELECT SOIPL.edition_question(?,?,?)");
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
+			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT SOIPL.view_toutes_questions_titre WHERE r.id_utilisateur = ?");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -358,6 +359,24 @@ public class Programme {
 	public void visualiserQuestionsRepondues() {
 		utilisateurDesactive();
 		System.out.println("Affichage de toutes les questions répondues");
+		utilisateurDesactive();
+		ArrayList<Integer> ids = new ArrayList<Integer>();
+		try {
+			psVisualiserQuestionsRepondue.setInt(1,this.utilisateur);
+            ResultSet rs = psVisualiserQuestionsRepondue.executeQuery();
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + ". " + rs.getString(7));
+                ids.add(Integer.parseInt(rs.getString(1)));
+            }
+            rs.close();
+        }catch(SQLException se) {
+			System.out.println(se);
+		}catch (Exception e) {
+        	System.out.println("Vous n'avez pas encore répondu à des questions");
+        	e.printStackTrace();
+			menuAvecChoix();
+        }
+		
 		menuAvecChoix();
 	}
 	
