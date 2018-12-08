@@ -30,6 +30,7 @@ public class Programme {
 	private PreparedStatement psEditionQuestion;
 	private PreparedStatement psEditionTitreQuestion;
 	private PreparedStatement psVisualiserQuestionsRepondue;
+	private PreparedStatement psAjoutTag;
 	
 	public Programme(){
 		this.connection = connexionDB();	
@@ -51,6 +52,7 @@ public class Programme {
 			this.psEditionQuestion = connection.prepareStatement("SELECT SOIPL.edition_question(?,?,?)");
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
 			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT SOIPL.view_toutes_questions_titre WHERE r.id_utilisateur = ?");
+			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.ajout_tag_question(?,?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -147,7 +149,7 @@ public class Programme {
 				psInscriptionNouvelUtil.setString(3,password);
 				psInscriptionNouvelUtil.executeQuery();
 			}catch (SQLException se) {
-				//TODO (à completer)
+				//s
 				System.out.println("Erreur lors de l’insertion ! Essayer une autre adresse mail, ou un autre nom d'utilisateur");
 				connexionUtilisateur();
 			}
@@ -206,17 +208,7 @@ public class Programme {
 		}
 		System.out.println("Quel question souhaitez voir en detail ?");
 		int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
-		try {
-			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
-			ResultSet rs = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
-			int i = 0;
-			while(rs.next()){
-				i++;
-				System.out.println(i + " " + rs.getString(0));
-			}
-		}catch(SQLException se) {
-			
-		}
+		voirQuestion(choixVisualisationQuestionSpecifique);
 		menuAvecChoix();
 	}
 	
@@ -242,6 +234,91 @@ public class Programme {
 			System.out.println("Quel question souhaitez voir en detail ?");
 			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
 		}while(!ids.contains(choixVisualisationQuestionSpecifique));
+		voirQuestion(choixVisualisationQuestionSpecifique);
+		menuAvecChoix();
+	}
+	
+	public void visualiserQuestionsRepondues() {
+		utilisateurDesactive();
+		System.out.println("Affichage de toutes les questions répondues");
+		utilisateurDesactive();
+		ArrayList<Integer> ids = new ArrayList<Integer>();
+		try {
+			psVisualiserQuestionsRepondue.setInt(1,this.utilisateur);
+            ResultSet rs = psVisualiserQuestionsRepondue.executeQuery();
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + ". " + rs.getString(7));
+                ids.add(Integer.parseInt(rs.getString(1)));
+            }
+            rs.close();
+        }catch(SQLException se) {
+			System.out.println(se);
+		}catch (Exception e) {
+        	System.out.println("Vous n'avez pas encore répondu à des questions");
+        	e.printStackTrace();
+			menuAvecChoix();
+        }
+		int choixVisualisationQuestionSpecifique;
+		do {
+			System.out.println("Quel question souhaitez voir en detail ?");
+			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
+		}while(!ids.contains(choixVisualisationQuestionSpecifique));
+		voirQuestion(choixVisualisationQuestionSpecifique);
+		menuAvecChoix();
+	}
+	
+	public void visualiserQuestionsAvecTag() {
+		utilisateurDesactive();
+		System.out.println("voici la liste des tags");
+		try {
+			ResultSet rs = psSelectionDeTousLesTags.executeQuery();
+			while(rs.next()) {
+				System.out.println(rs.getInt(1) + ". " + rs.getString(2));
+			}
+		}catch(SQLException se) {
+			se.printStackTrace();
+		}
+		System.out.println("Veuillez choisir le numero du tag que vous souhaitez regarder");
+		int chiffre = Integer.parseInt(scanner.nextLine());
+		ArrayList<Integer> ids = new ArrayList<Integer>();
+		try {
+			psSelectionQuestionParTag.setInt(1, chiffre);
+			ResultSet rs = psSelectionQuestionParTag.executeQuery();
+			while(rs.next()) {
+				System.out.println(rs.getInt(1) + ". " + rs.getInt(2) + " " + rs.getTimestamp(3) + " " + rs.getInt(4) + " " + rs.getTimestamp(5) + " " + rs.getString(6) + " " + rs.getString(7) + " " + rs.getBoolean(8));
+				ids.add(Integer.parseInt(rs.getString(1)));
+			}
+		}catch(SQLException se) {
+			se.printStackTrace();
+		}
+		int choixVisualisationQuestionSpecifique;
+		do {
+			System.out.println("Quel question souhaitez voir en detail ?");
+			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
+		}while(!ids.contains(choixVisualisationQuestionSpecifique));
+		voirQuestion(choixVisualisationQuestionSpecifique);
+		menuAvecChoix();
+	}
+	
+	public void utilisateurDesactive() {
+		try {
+			psUtilisateurPasDesactive.setInt(1, utilisateur);
+            ResultSet rs = psUtilisateurPasDesactive.executeQuery();
+            boolean ok = false;
+            while (rs.next()) {
+            	ok = rs.getBoolean(1);
+            }
+            if(ok) {
+            	System.out.println("Vous avez été désactivé");
+            	connexionUtilisateur();
+            }
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
+	
+	public void voirQuestion(int choixVisualisationQuestionSpecifique) {
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
@@ -286,6 +363,7 @@ public class Programme {
 		System.out.println("     > Répondre (R)");
 		System.out.println("     > Voter (V)");
 		System.out.println("     > Editer (E)");
+		System.out.println("     > Ajouter Tags (T)");
 		System.out.println("     > Quitter (Q)");
 		String rep = scanner.nextLine();
 		
@@ -352,75 +430,21 @@ public class Programme {
 				System.out.println(se);
 			}
 			break;
-		}
-		menuAvecChoix();
-	}
-	
-	public void visualiserQuestionsRepondues() {
-		utilisateurDesactive();
-		System.out.println("Affichage de toutes les questions répondues");
-		utilisateurDesactive();
-		ArrayList<Integer> ids = new ArrayList<Integer>();
-		try {
-			psVisualiserQuestionsRepondue.setInt(1,this.utilisateur);
-            ResultSet rs = psVisualiserQuestionsRepondue.executeQuery();
-            while (rs.next()) {
-                System.out.println(rs.getString(1) + ". " + rs.getString(7));
-                ids.add(Integer.parseInt(rs.getString(1)));
-            }
-            rs.close();
-        }catch(SQLException se) {
-			System.out.println(se);
-		}catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore répondu à des questions");
-        	e.printStackTrace();
-			menuAvecChoix();
-        }
-		
-		menuAvecChoix();
-	}
-	
-	public void visualiserQuestionsAvecTag() {
-		utilisateurDesactive();
-		System.out.println("voici la liste des tags");
-		try {
-			ResultSet rs = psSelectionDeTousLesTags.executeQuery();
-			while(rs.next()) {
-				System.out.println(rs.getInt(1) + ". " + rs.getString(2));
+		case "T" :
+			try {
+				System.out.println("Quel tag voulez-vous ajouter ?");
+				String tag = scanner.nextLine();
+				psAjoutTag.setString(1, tag);
+				psAjoutTag.setInt(2, choixVisualisationQuestionSpecifique);
+				psAjoutTag.executeQuery();
+				System.out.println("");
+				System.out.println("Merci !");
+				System.out.println("");
+			}catch(SQLException se) {
+				System.out.println(se);
 			}
-		}catch(SQLException se) {
-			se.printStackTrace();
+			break;
 		}
-		System.out.println("Veuillez choisir le numero du tag que vous souhaitez regarder");
-		int chiffre = Integer.parseInt(scanner.nextLine());
-		try {
-			psSelectionQuestionParTag.setInt(1, chiffre);
-			ResultSet rs = psSelectionQuestionParTag.executeQuery();
-			while(rs.next()) {
-				System.out.println(rs.getInt(1) + ". " + rs.getInt(2) + " " + rs.getTimestamp(3) + " " + rs.getInt(4) + " " + rs.getTimestamp(5) + " " + rs.getString(6) + " " + rs.getString(7) + " " + rs.getBoolean(8));
-			}
-		}catch(SQLException se) {
-			se.printStackTrace();
-		}
-		menuAvecChoix();
-	}
-	
-	public void utilisateurDesactive() {
-		try {
-			psUtilisateurPasDesactive.setInt(1, utilisateur);
-            ResultSet rs = psUtilisateurPasDesactive.executeQuery();
-            boolean ok = false;
-            while (rs.next()) {
-            	ok = rs.getBoolean(1);
-            }
-            if(ok) {
-            	System.out.println("Vous avez été désactivé");
-            	connexionUtilisateur();
-            }
-            rs.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 	}
 	
 	public void fermerLeProgramme(){
@@ -436,6 +460,7 @@ public class Programme {
 			psVote.close();
 			psEditionQuestion.close();
 			psEditionTitreQuestion.close();
+			psAjoutTag.close();
 			scanner.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
