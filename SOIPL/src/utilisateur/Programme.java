@@ -236,7 +236,6 @@ public class Programme {
 			menuAvecChoix();
         }
 		System.out.println("");
-		//TODO soucis au niveau de l'affichage voir pk
 		int choixVisualisationQuestionSpecifique;
 		do {
 			System.out.println("Quel question souhaitez voir en detail ?");

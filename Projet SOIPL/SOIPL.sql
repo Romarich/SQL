@@ -2,7 +2,7 @@
 --TODO : TRIGGER 
 
 --TODO : APPLICATION UTILISATEUR
--- ╔ vérifier si utilisateur non désactivé à la connexion (trigger) --pense paas finalement
+-- ╔ FAIT :: vérifier si utilisateur non désactivé à la connexion (trigger) --pense paas finalement
 -- ╠ ajout tag questions (insert) nam 
 -- ╠ selection questions posées ou répondues (query) nam ┐
 -- ╠ FAIT :: selection toutes les questions (query) nam  ├ afficher date, num, utilisateur, date edit, util edit, titre
@@ -166,7 +166,7 @@ THEN
 		THEN
 			UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur;
 		ELSE
-			RAISE 'On ne peut pas diminuer le statut d un utilisateur';
+			--RAISE 'On ne peut pas diminuer le statut d un utilisateur';
 		END IF;
 	END IF;
 END IF;
@@ -184,19 +184,17 @@ UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 
 -- liste des autres triggers a faire :
 
-CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
+/*CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
 DECLARE 
 	_statut VARCHAR(6);
 BEGIN	
 	SELECT statut FROM SOIPL.utilisateurs WHERE id_utilisateur = NEW.id_utilisateur INTO _statut;
 	IF _statut = 'master' AND NEW.statut <> 'master'
 	THEN
-		UPDATE SOIPL.utilisateurs SET statut = 'master' WHERE id_utilisateur = NEW.id_utilisateur;
 		RAISE 'On ne peut pas diminuer le statut d un utilisateur';
 	END IF;
  	IF _statut = 'avancé' AND NEW.statut = 'normal'
 	THEN
-		UPDATE SOIPL.utilisateurs SET statut = 'avancé' WHERE id_utilisateur = NEW.id_utilisateur;
 		RAISE 'On ne peut pas diminuer le statut d un utilisateur';
 	END IF;
 	RETURN NEW;
@@ -204,9 +202,7 @@ END;
 $$ LANGUAGE 'plpgsql';
  CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
-
-
-
+*/
 -- +5 en cas de vote ++ jamais + 100
 
 CREATE OR REPLACE FUNCTION SOIPL.augmentation_reputation() RETURNS TRIGGER AS $$
@@ -215,17 +211,12 @@ DECLARE
 	_reputation INTEGER;
 BEGIN
 
-SELECT NEW.id_utilisateur FROM SOIPL.votes
+SELECT r.id_utilisateur FROM SOIPL.reponses r WHERE r.id_reponse = NEW.id_reponse
 INTO _id_utilisateur;
-SELECT u.reputation FROM SOIPL.utilisateurs u, SOIPL.votes v WHERE v.id_utilisateur = NEW.id_utilisateur
+SELECT u.reputation FROM SOIPL.utilisateurs u WHERE u.id_utilisateur = _id_utilisateur
 INTO _reputation;
 	IF _reputation<100
 	THEN
-		SELECT NEW.id_utilisateur FROM SOIPL.votes
-		INTO _id_utilisateur;
-		SELECT u.reputation FROM SOIPL.utilisateurs u, SOIPL.votes v WHERE v.id_utilisateur = NEW.id_utilisateur
-		INTO _reputation;
-			
 		_reputation = _reputation+5;
 
 		IF _reputation<100
@@ -239,10 +230,25 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
-
---DROP TRIGGER statut_maj_trigger ON SOIPL.utilisateurs; A retirer apres
 CREATE TRIGGER statut_maj_trigger AFTER INSERT ON SOIPL.votes FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.augmentation_reputation();
+
+CREATE OR REPLACE FUNCTION SOIPL.vote_pas_deux_fois() RETURNS TRIGGER AS $$
+DECLARE 
+	_nb_vote_une_personne INTEGER;
+BEGIN	
+	SELECT COUNT(*) FROM SOIPL.votes v WHERE v.id_reponse = NEW.id_reponse AND v.id_utilisateur = NEW.id_utilisateur INTO _nb_vote_une_personne;
+	IF _nb_vote_une_personne > 1
+	THEN 
+		RAISE 'Tu ne peux pas voter deux fois pour la meme reponse';
+		DELETE FROM SOIPL.votes WHERE id_vote = NEW.id_vote;
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER verif_vote_pas_deux_fois AFTER INSERT ON SOIPL.votes FOR EACH ROW 
+EXECUTE PROCEDURE SOIPL.vote_pas_deux_fois();
 
 CREATE OR REPLACE FUNCTION SOIPL.vote_pas_pour_soi_meme() RETURNS TRIGGER AS $$
 DECLARE 
@@ -276,6 +282,34 @@ $$ LANGUAGE 'plpgsql';
 
 CREATE TRIGGER vote_negatif_et_verif_master AFTER INSERT ON SOIPL.votes FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.vote_negatif_et_verif_master();
+
+/*CREATE OR REPLACE FUNCTION SOIPL.peut_voter() RETURNS TRIGGER AS $$
+DECLARE 
+	_id_util INTEGER;
+	_statut VARCHAR(6);
+	_date_dernier_vote TIMESTAMP;
+	_diff INTEGER;
+BEGIN	
+	SELECT v.id_utilisateur FROM SOIPL.votes v WHERE v.id_vote = NEW.id_vote INTO _id_util;
+	SELECT u.statut FROM SOIPL.utilisateurs u WHERE u.id_utilisateur = _id_util INTO _statut;
+
+	IF _statut = 'avancé'
+	THEN 
+		SELECT MAX(v.date_heure) FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
+		SELECT DATEDIFF(DAY,_date_dernier_vote, CURRENT_TIMESTAMP) INTO _diff;
+	END IF;
+
+	IF _statut = 'normal' 
+	THEN
+		RAISE 'Tu ne peux pas voter car tu n''as pas un grade assez haut';
+	END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE TRIGGER peut_voter AFTER INSERT ON SOIPL.votes FOR EACH ROW 
+EXECUTE PROCEDURE SOIPL.peut_voter();*/
+
 -- liste des autres triggers a faire :
 /*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
 /*FAIRE LES TRIGGER POUR BLOQUER LA REPUTATION A 100*/
