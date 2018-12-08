@@ -3,7 +3,7 @@
 
 --TODO : APPLICATION UTILISATEUR
 -- ╔ FAIT :: vérifier si utilisateur non désactivé à la connexion (trigger) --pense paas finalement
--- ╠ ajout tag questions (insert) nam 
+-- ╠ FAIT :: ajout tag questions (insert) nam 
 -- ╠ selection questions posées ou répondues (query) nam ┐
 -- ╠ FAIT :: selection toutes les questions (query) nam  ├ afficher date, num, utilisateur, date edit, util edit, titre
 -- ╠ selection question liée à un tag (query)  nam       ┘
@@ -368,22 +368,23 @@ $$ LANGUAGE 'plpgsql';
 
 
 
-/*CREATE OR REPLACE FUNCTION SOIPL.ajout_tag_question(VARCHAR,INTEGER) RETURNS INTEGER AS $$
+CREATE OR REPLACE FUNCTION SOIPL.ajout_tag_question(VARCHAR,INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_tag ALIAS FOR $1;
 	_question ALIAS FOR $2;
-	_nb_question INTEGER;
+	_id_tag INTEGER;
 BEGIN
-	SELECT count(*) FROM SOIPL.questions
-	INTO _nb_question;
-
-	IF _question < _nb_question AND _question > 0
+	IF EXISTS(SELECT id_tag FROM SOIPL.tags WHERE _tag = tag)
 	THEN
-		INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (_question,_tag);
+		SELECT id_tag FROM SOIPL.tags WHERE _tag = tag INTO _id_tag;
+		INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (_question,_id_tag);
 	END IF;
+	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
-*/
+
+
+
 CREATE OR REPLACE FUNCTION SOIPL.creation_vote (INTEGER,BOOLEAN,INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_id_utilisateur ALIAS FOR $1;
@@ -408,6 +409,9 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
+
+
+
 /*LES VUES*/
 --CREATE OF REPLACE FUNCTION affichage_toutes_questions RETURNS INTEGER AS $$
 -- voir comment return une liste
