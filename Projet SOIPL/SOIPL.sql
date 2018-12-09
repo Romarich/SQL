@@ -402,10 +402,12 @@ DECLARE
 	_nombre_tag INTEGER;
 BEGIN
 	SELECT COUNT(*) FROM SOIPL.question_tag WHERE id_question = _question INTO _nombre_tag;
-	IF EXISTS(SELECT id_tag FROM SOIPL.tags WHERE _tag = tag) AND _nombre_tag < 5 AND NOT EXISTS (SELECT qt.id_tag FROM SOIPL.question_tag qt, SOIPL.tags t WHERE _tag = t.tag AND _question = id_question AND t.id_tag = qt.id_tag)
+	IF EXISTS(SELECT id_tag FROM SOIPL.tags WHERE _tag = tag) AND _nombre_tag < 2 AND NOT EXISTS (SELECT qt.id_tag FROM SOIPL.question_tag qt, SOIPL.tags t WHERE _tag = t.tag AND _question = id_question AND t.id_tag = qt.id_tag)
 	THEN
 		SELECT id_tag FROM SOIPL.tags WHERE _tag = tag INTO _id_tag;
 		INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (_question,_id_tag);
+	ELSE
+		RAISE 'Erreur dans l ajout';
 	END IF;
 	RETURN 1;
 END;
@@ -466,7 +468,8 @@ CREATE OR REPLACE VIEW SOIPL.view_toutes_questions AS
 		texte AS "texte",
 		titre AS "titre",
 		cloture AS "cloture"
-	FROM SOIPL.questions;
+	FROM SOIPL.questions
+	ORDER BY date_creation;
 
 CREATE OR REPLACE VIEW SOIPL.view_questions_utilisateurs AS
 	SELECT  q.id_question AS "id_question",
@@ -494,7 +497,23 @@ CREATE OR REPLACE VIEW SOIPL.view_reponses_utilisateurs AS
 	FROM SOIPL.reponses r, SOIPL.utilisateurs u
 	WHERE r.id_utilisateur = u.id_utilisateur
 	ORDER BY r.score DESC;
-		
+
+CREATE OR REPLACE VIEW SOIPL.view_questions_tags AS
+	SELECT  q.id_question AS "id_question",
+		q.utilisateur_createur AS "utilisateur_createur",
+		q.date_creation AS "date_creation",
+		q.utilisateur_edition AS "utilisateur_edition",
+		q.date_derniere_edition AS "date_derniere_edition",
+		q.texte AS "texte",
+		q.titre AS "titre",
+		q.cloture AS "cloture",
+		t.id_ligne_question_tag AS "id_ligne_question_tag",
+		t.id_question AS "id_question_tag",
+		t.id_tag AS "id_tag"
+	FROM SOIPL.questions q, SOIPL.question_tag t
+	WHERE q.id_question = t.id_question
+	ORDER BY q.date_creation;
+
 --CREATE OR REPLACE VIEW SOIPL.selection_questions_posees_par_utilisateur(@id_utilisateur INT) AS
 --SELECT titre, utilisateur_createur, date_creation, utilisateur_edition, date_derniere_edition FROM SOIPL.questions WHERE @id_utilisateur = utilisateur_createur AND cloture = false ORDER BY date_creation;
 

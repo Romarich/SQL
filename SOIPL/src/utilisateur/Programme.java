@@ -48,7 +48,7 @@ public class Programme {
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
 			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
 			this.psSelectionDeTousLesTags = connection.prepareStatement("SELECT * FROM SOIPL.tags");
-			this.psSelectionQuestionParTag = connection.prepareStatement("SELECT * FROM SOIPL.questions q, SOIPL.question_tag t WHERE t.id_tag = ? AND q.id_question = t.id_question");
+			this.psSelectionQuestionParTag = connection.prepareStatement("SELECT * FROM SOIPL.view_questions_tags WHERE id_tag = ?");
 			this.psVote = connection.prepareStatement("SELECT SOIPL.creation_vote(?,?,?)");
 			this.psEditionQuestion = connection.prepareStatement("SELECT SOIPL.edition_question(?,?,?)");
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
