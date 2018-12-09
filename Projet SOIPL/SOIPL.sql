@@ -156,7 +156,7 @@ SELECT r.id_utilisateur FROM SOIPL.reponses r WHERE r.id_reponse = NEW.id_repons
 INTO _id_utilisateur;
 SELECT u.reputation FROM SOIPL.utilisateurs u WHERE u.id_utilisateur = _id_utilisateur
 INTO _reputation;
-	IF _reputation<100
+	IF _reputation<100 AND NEW.positif = true
 	THEN
 		_reputation = _reputation+5;
 
@@ -184,8 +184,12 @@ SELECT r.score FROM SOIPL.reponses r WHERE r.id_reponse = NEW.id_reponse
 INTO _score;
 	IF NEW.positif = false
 	THEN
-		_score = _score-1;
-		UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
+		IF _score <> 0
+		THEN
+			_score = _score-1;
+			UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
+		END IF;
+		
 	ELSE
 		_score = _score+1;
 		UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
