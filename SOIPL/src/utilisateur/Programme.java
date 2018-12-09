@@ -31,6 +31,7 @@ public class Programme {
 	private PreparedStatement psEditionTitreQuestion;
 	private PreparedStatement psVisualiserQuestionsRepondue;
 	private PreparedStatement psAjoutTag;
+	private PreparedStatement psCloturerQuestion;
 	
 	public Programme(){
 		this.connection = connexionDB();	
@@ -53,6 +54,7 @@ public class Programme {
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
 			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT SOIPL.view_toutes_questions_titre WHERE r.id_utilisateur = ?");
 			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.ajout_tag_question(?,?)");
+			this.psCloturerQuestion = connection.prepareStatement("SELECT SOIPL.cloturer_question(?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -363,6 +365,7 @@ public class Programme {
 		System.out.println("     > Voter (V)");
 		System.out.println("     > Editer (E)");
 		System.out.println("     > Ajouter Tags (T)");
+		System.out.println("     > Cloturer la Question (C)");
 		System.out.println("     > Quitter (Q)");
 		String rep = scanner.nextLine();
 		
@@ -443,6 +446,14 @@ public class Programme {
 				System.out.println(se);
 			}
 			break;
+		
+		case "C" :
+			try {
+				psCloturerQuestion.setInt(1, choixVisualisationQuestionSpecifique);
+				psCloturerQuestion.executeQuery();
+			}catch(SQLException se) {
+				System.out.println(se);
+			}
 		}
 	}
 	

@@ -296,12 +296,15 @@ BEGIN
 	IF _statut = 'avancé'
 	THEN 
 		SELECT MAX(v.date_heure) FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
-		--SELECT age(to_timestamp(substring(to_char(date_trunc('day',_date_dernier_vote), 'YYYY-MM-DD') from 1 for 10),'YYYY-MM-DD'),CURRENT_DATE) FROM SOIPL.votes INTO _diff;
+		IF (_date_dernier_vote + interval'24h') < now()
+		THEN
+			RAISE 'Vous avez déjà voté trop récemment';
+		END IF;
 	END IF;
 
 	IF _statut = 'normal' 
 	THEN
-		RAISE 'Tu ne peux pas voter car tu n''as pas un grade assez haut';
+		RAISE 'Tu ne peux pas voter car tu n as pas un grade assez haut';
 	END IF;
 	RETURN NULL;
 END;
@@ -373,8 +376,10 @@ DECLARE
 	_tag ALIAS FOR $1;
 	_question ALIAS FOR $2;
 	_id_tag INTEGER;
+	_nombre_tag INTEGER;
 BEGIN
-	IF EXISTS(SELECT id_tag FROM SOIPL.tags WHERE _tag = tag)
+	SELECT COUNT(*) FROM SOIPL.question_tag WHERE id_question = _question INTO _nombre_tag;
+	IF EXISTS(SELECT id_tag FROM SOIPL.tags WHERE _tag = tag) AND _nombre_tag < 5 AND NOT EXISTS (SELECT qt.id_tag FROM SOIPL.question_tag qt, SOIPL.tags t WHERE _tag = t.tag AND _question = id_question AND t.id_tag = qt.id_tag)
 	THEN
 		SELECT id_tag FROM SOIPL.tags WHERE _tag = tag INTO _id_tag;
 		INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (_question,_id_tag);
@@ -482,6 +487,21 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
+CREATE OR REPLACE FUNCTION SOIPL.cloturer_question (INTEGER) RETURNS INTEGER AS $$
+DECLARE
+	_question ALIAS FOR $1;
+
+BEGIN
+	IF TRUE = (SELECT cloture FROM SOIPL.questions WHERE id_question = _question)
+	THEN
+		RAISE 'Question déjà cloturée';
+	ELSE
+		UPDATE SOIPL.questions SET cloture = TRUE
+		WHERE id_question = _question;
+	END IF;
+	RETURN 1;
+END;
+$$ LANGUAGE 'plpgsql';
 
 /*SELECTIONS DIVERSES*/
 CREATE OR REPLACE FUNCTION SOIPL.selection_id_utilisateur_avec_nom_utilisateur (VARCHAR) RETURNS INTEGER AS $$
