@@ -54,7 +54,7 @@ public class Programme {
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
 			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions_titre WHERE id_utilisateur = ?");
 			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.ajout_tag_question(?,?)");
-			this.psCloturerQuestion = connection.prepareStatement("SELECT SOIPL.cloturer_question(?)");
+			this.psCloturerQuestion = connection.prepareStatement("SELECT SOIPL.cloturer_question(?,?)");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -453,6 +453,7 @@ public class Programme {
 		case "C" :
 			try {
 				psCloturerQuestion.setInt(1, choixVisualisationQuestionSpecifique);
+				psCloturerQuestion.setInt(2, utilisateur);
 				psCloturerQuestion.executeQuery();
 			}catch(SQLException se) {
 				System.out.println(se);

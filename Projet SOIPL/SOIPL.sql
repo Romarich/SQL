@@ -256,6 +256,25 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER augmentation_score_reponses AFTER INSERT ON SOIPL.votes FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.augmentation_score_reponses();
 
+CREATE OR REPLACE FUNCTION SOIPL.util_normal_peut_pas_editer() RETURNS TRIGGER AS $$
+DECLARE
+	_statut_util VARCHAR(6);
+BEGIN
+
+SELECT statut FROM SOIPL.utilisateurs WHERE id_utilisateur = NEW.utilisateur_edition
+INTO _statut_util;
+	IF _statut_util = 'normal'
+	THEN
+		RAISE 'Votre statut est trop bas pour pouvoir editer la question';
+	END IF;
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER util_normal_peut_pas_editer AFTER UPDATE ON SOIPL.questions FOR EACH ROW
+EXECUTE PROCEDURE SOIPL.util_normal_peut_pas_editer();
+
+
 CREATE OR REPLACE FUNCTION SOIPL.vote_pas_deux_fois() RETURNS TRIGGER AS $$
 DECLARE 
 	_nb_vote_une_personne INTEGER;
@@ -556,17 +575,25 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION SOIPL.cloturer_question (INTEGER) RETURNS INTEGER AS $$
+CREATE OR REPLACE FUNCTION SOIPL.cloturer_question (INTEGER,INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_question ALIAS FOR $1;
+	_id_utilisateur ALIAS FOR $2;
+	_statut VARCHAR(6);
 
 BEGIN
-	IF TRUE = (SELECT cloture FROM SOIPL.questions WHERE id_question = _question)
+	SELECT statut FROM SOIPL.utilisateurs WHERE id_utilisateur = _id_utilisateur INTO _statut;
+	IF _statut = 'master'
 	THEN
-		RAISE 'Question déjà cloturée';
+		IF TRUE = (SELECT cloture FROM SOIPL.questions WHERE id_question = _question)
+		THEN
+			RAISE 'Question déjà cloturée';
+		ELSE
+			UPDATE SOIPL.questions SET cloture = TRUE
+			WHERE id_question = _question;
+		END IF;
 	ELSE
-		UPDATE SOIPL.questions SET cloture = TRUE
-		WHERE id_question = _question;
+		RAISE 'Vous ne pouvez pas cloturer une question car vous n''etes pas master';
 	END IF;
 	RETURN 1;
 END;
@@ -628,6 +655,7 @@ GRANT SELECT ON SOIPL.view_toutes_questions_titre TO rhonore16;
 GRANT SELECT ON SOIPL.view_toutes_questions TO rhonore16;
 GRANT SELECT ON SOIPL.view_questions_utilisateurs TO rhonore16;
 GRANT SELECT ON SOIPL.view_reponses_utilisateurs TO rhonore16;
+GRANT SELECT ON SOIPL.view_questions_tags TO rhonore16;
 
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.utilisateurs_id_utilisateur_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
