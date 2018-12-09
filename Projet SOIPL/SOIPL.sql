@@ -12,7 +12,7 @@
 -- ║  ╠ FAIT/2 :: voter am (24h pour a, illimité pour m)
 -- ║  ╠ FAIT :: editer question ou reponse am
 -- ║  ╠ ajout tag am 
--- ╠══╩ cloturer question m 
+-- ╠══╩ FAIT :: cloturer question m 
 -- ╚ FAIT :: reputation augmente → possible changement statut 
 
 --TODO : APPLICATION CENTRALE 
@@ -428,7 +428,8 @@ CREATE OR REPLACE VIEW SOIPL.view_toutes_questions_titre AS
 		q.id_question,
 		q.utilisateur_createur,
 		q.date_derniere_edition,
-		q.utilisateur_edition
+		q.utilisateur_edition,
+		r.id_utilisateur
 	FROM SOIPL.questions q, SOIPL.reponses r
 	WHERE r.id_question = q.id_question
 	ORDER BY q.date_creation;
@@ -444,7 +445,33 @@ CREATE OR REPLACE VIEW SOIPL.view_toutes_questions AS
 		cloture AS "cloture"
 	FROM SOIPL.questions;
 
-	
+CREATE OR REPLACE VIEW SOIPL.view_questions_utilisateurs AS
+	SELECT  q.id_question AS "id_question",
+		q.utilisateur_createur AS "utilisateur_createur",
+		q.date_creation AS "date_creation",
+		q.utilisateur_edition AS "utilisateur_edition",
+		q.date_derniere_edition AS "date_derniere_edition",
+		q.texte AS "texte",
+		q.titre AS "titre",
+		q.cloture AS "cloture",
+		u.nom_utilisateur AS "nom_utilisateur"
+	FROM SOIPL.questions q, SOIPL.utilisateurs u 
+	WHERE u.id_utilisateur = q.utilisateur_createur
+	ORDER BY q.date_creation;
+
+CREATE OR REPLACE VIEW SOIPL.view_reponses_utilisateurs AS
+	SELECT	r.id_reponse,
+		r.id_reponse_par_question,
+		r.id_question,
+		r.id_utilisateur,
+		r.score,
+		r.texte,
+		r.date_heure,
+		u.nom_utilisateur
+	FROM SOIPL.reponses r, SOIPL.utilisateurs u
+	WHERE r.id_utilisateur = u.id_utilisateur
+	ORDER BY r.score DESC;
+		
 --CREATE OR REPLACE VIEW SOIPL.selection_questions_posees_par_utilisateur(@id_utilisateur INT) AS
 --SELECT titre, utilisateur_createur, date_creation, utilisateur_edition, date_derniere_edition FROM SOIPL.questions WHERE @id_utilisateur = utilisateur_createur AND cloture = false ORDER BY date_creation;
 

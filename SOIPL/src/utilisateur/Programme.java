@@ -41,9 +41,9 @@ public class Programme {
 			this.psSelectionDeLUtilisateurEnCours = connection.prepareStatement("SELECT SOIPL.selection_id_utilisateur_avec_nom_utilisateur(?)");
 			this.psIntroductionNouvelleQuestion = connection.prepareStatement("SELECT SOIPL.creation_nouvelle_question(?,?,?);" );
 			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
-			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT q.*, u.nom_utilisateur FROM SOIPL.questions q, SOIPL.utilisateurs u WHERE q.id_question = ? AND u.id_utilisateur = q.utilisateur_createur");
+			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT * FROM SOIPL.view_questions_utilisateurs WHERE id_question = ?");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions");
-			this.psVisualiserReponses = connection.prepareStatement("SELECT r.*, u.nom_utilisateur FROM SOIPL.reponses r, SOIPL.utilisateurs u WHERE r.id_question = ? AND u.id_utilisateur = r.id_utilisateur ORDER BY r.score DESC");
+			this.psVisualiserReponses = connection.prepareStatement("SELECT * FROM SOIPL.view_reponses_utilisateurs WHERE r.id_question = ?");
 			//this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
 			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
@@ -52,7 +52,7 @@ public class Programme {
 			this.psVote = connection.prepareStatement("SELECT SOIPL.creation_vote(?,?,?)");
 			this.psEditionQuestion = connection.prepareStatement("SELECT SOIPL.edition_question(?,?,?)");
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
-			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT SOIPL.view_toutes_questions_titre WHERE r.id_utilisateur = ?");
+			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions_titre WHERE id_utilisateur = ?");
 			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.ajout_tag_question(?,?)");
 			this.psCloturerQuestion = connection.prepareStatement("SELECT SOIPL.cloturer_question(?)");
 		} catch (SQLException e) {
@@ -67,7 +67,7 @@ public class Programme {
 		System.out.println("|           Que voulez-vous faire ?          |");
 		System.out.println("----------------------------------------------");
 		System.out.println("|1. Introduire une nouvelle question.        |");
-		System.out.println("|2. Visualiser les questions posées.         |");
+		System.out.println("|2. Visualiser les questions posÃ©es.         |");
 		System.out.println("|3. Visualiser les questions repondues.      |");
 		System.out.println("|4. Visualiser toutes les questions.         |");
 		System.out.println("|5. Visualiser les questions d'un tag.       |");
@@ -128,7 +128,7 @@ public class Programme {
 	                ok = BCrypt.checkpw(password, rs.getString(2));
 	            }
 	            if(!ok) {
-	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a été désactivé");
+	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a Ã©tÃ© dÃ©sactivÃ©");
 	            	connexionUtilisateur();
 	            }else {
 	            	menuAvecChoix();
@@ -152,7 +152,7 @@ public class Programme {
 				psInscriptionNouvelUtil.executeQuery();
 			}catch (SQLException se) {
 				//s
-				System.out.println("Erreur lors de l’insertion ! Essayer une autre adresse mail, ou un autre nom d'utilisateur");
+				System.out.println("Erreur lors de lâ€™insertion ! Essayer une autre adresse mail, ou un autre nom d'utilisateur");
 				connexionUtilisateur();
 			}
 			try {				 
@@ -176,7 +176,7 @@ public class Programme {
 		while("".equals(titre)) {
 			titre = scanner.nextLine();
 		}
-		System.out.println("Introduisez votre nouvelle question");
+		System.out.println("Introduisez le corps de votre question");
 		String corpQuestion="";
 		while("".equals(corpQuestion)) {
 			corpQuestion = scanner.nextLine();
@@ -187,7 +187,7 @@ public class Programme {
 			psIntroductionNouvelleQuestion.setString(3,titre);
 			psIntroductionNouvelleQuestion.executeQuery();	
 		}catch (SQLException se) {
-			System.out.println("Erreur lors de l’insertion !");
+			System.out.println("Erreur lors de lâ€™insertion !");
 			se.printStackTrace();
 			System.exit(1);
 		}
@@ -197,15 +197,17 @@ public class Programme {
 	public void visualiserQuestionsPosees() {
 		utilisateurDesactive();
 		try {
-			psVisualiserQuestionsPosees.setInt(1, utilisateur);
+			psVisualiserQuestionsPosees.setInt(1, this.utilisateur);
 			ResultSet rs = psVisualiserQuestionsPosees.executeQuery();
-			int i = 0;
-			while(rs.next()){
-				i++;
-				System.out.println(i + " " + rs.getString(0));
-			}
+			ArrayList<Integer> ids = new ArrayList<Integer>();
+			while (rs.next()) {
+                System.out.println(rs.getString(1) + ". " + rs.getString(7));
+                ids.add(Integer.parseInt(rs.getString(1)));
+            }
 		}catch(SQLException se) {
-			System.out.println("Vous n'avez pas encore posé de questions");
+			System.out.println(this.utilisateur);
+			System.out.println(se);
+			System.out.println("Vous n'avez pas encore posÃ© de questions");
 			menuAvecChoix();
 		}
 		System.out.println("Quel question souhaitez voir en detail ?");
@@ -225,12 +227,13 @@ public class Programme {
             }
             rs.close();
         } catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore posé de questions");
+        	System.out.println("Vous n'avez pas encore posÃ© de questions");
         	e.printStackTrace();
 			menuAvecChoix();
         }
 		System.out.println("");
 		int choixVisualisationQuestionSpecifique;
+
 		do {
 			System.out.println("Quel question souhaitez voir en detail ?");
 			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
@@ -241,21 +244,19 @@ public class Programme {
 	
 	public void visualiserQuestionsRepondues() {
 		utilisateurDesactive();
-		System.out.println("Affichage de toutes les questions répondues");
-		utilisateurDesactive();
 		ArrayList<Integer> ids = new ArrayList<Integer>();
 		try {
 			psVisualiserQuestionsRepondue.setInt(1,this.utilisateur);
             ResultSet rs = psVisualiserQuestionsRepondue.executeQuery();
             while (rs.next()) {
-                System.out.println(rs.getString(1) + ". " + rs.getString(7));
-                ids.add(Integer.parseInt(rs.getString(1)));
+                System.out.println(rs.getString(3) + ". " + rs.getString(1));
+                ids.add(Integer.parseInt(rs.getString(3)));
             }
             rs.close();
         }catch(SQLException se) {
 			System.out.println(se);
 		}catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore répondu à des questions");
+        	System.out.println("Vous n'avez pas encore rÃ©pondu Ã  des questions");
         	e.printStackTrace();
 			menuAvecChoix();
         }
@@ -285,10 +286,11 @@ public class Programme {
 		try {
 			psSelectionQuestionParTag.setInt(1, chiffre);
 			ResultSet rs = psSelectionQuestionParTag.executeQuery();
-			while(rs.next()) {
-				System.out.println(rs.getInt(1) + ". " + rs.getInt(2) + " " + rs.getTimestamp(3) + " " + rs.getInt(4) + " " + rs.getTimestamp(5) + " " + rs.getString(6) + " " + rs.getString(7) + " " + rs.getBoolean(8));
-				ids.add(Integer.parseInt(rs.getString(1)));
-			}
+			while (rs.next()) {
+                System.out.println(rs.getString(1) + ". " + rs.getString(7));
+                ids.add(Integer.parseInt(rs.getString(1)));
+            }
+            rs.close();
 		}catch(SQLException se) {
 			se.printStackTrace();
 		}
@@ -310,7 +312,7 @@ public class Programme {
             	ok = rs.getBoolean(1);
             }
             if(ok) {
-            	System.out.println("Vous avez été désactivé");
+            	System.out.println("Vous avez Ã©tÃ© dÃ©sactivÃ©");
             	connexionUtilisateur();
             }
             rs.close();
@@ -320,6 +322,7 @@ public class Programme {
 	}
 	
 	public void voirQuestion(int choixVisualisationQuestionSpecifique) {
+		System.out.println("ici");
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
@@ -330,7 +333,7 @@ public class Programme {
                 System.out.println("\t" + rs1.getString(6));
                 System.out.print(rs1.getString(3));
                 if(rs1.getString(4) != null) {
-                	System.out.println(", dernière edition :" + rs1.getString(5) + " par " + rs1.getString(4));
+                	System.out.println(", derniÃ¨re edition :" + rs1.getString(5) + " par " + rs1.getString(4));
                 }else {
                 	System.out.println();
                 }
@@ -338,11 +341,12 @@ public class Programme {
                 System.out.println("");
             }
 		}catch(SQLException se) {
-			System.out.println("Cette question spécifique n'existe pas");
+			System.out.println(se);
+			System.out.println("Cette question spÃ©cifique n'existe pas");
 			toutesLesQuestions();
 		}
 		
-		System.out.println("Réponses à la question :");
+		System.out.println("RÃ©ponses Ã  la question :");
 		HashMap<Integer,Integer> map = new HashMap<Integer, Integer>(); 
 		try {
 			psVisualiserReponses.setInt(1, choixVisualisationQuestionSpecifique);
@@ -350,18 +354,18 @@ public class Programme {
 			System.out.println("----------------------------------------------");
 			while (rs2.next()) {
 				map.put(rs2.getInt(2), rs2.getInt(1));
-            	System.out.println(rs2.getInt(2) + ". Réponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
+            	System.out.println(rs2.getInt(2) + ". RÃ©ponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
                 System.out.println("\t" + rs2.getString(6));
-                System.out.println("Score de la réponse : " + rs2.getString(5));
+                System.out.println("Score de la rÃ©ponse : " + rs2.getString(5));
         		System.out.println("----------------------------------------------");
                 System.out.println("");
 			}
 		}catch(SQLException se) {
-		
+		System.out.println(se);
 		}
 
 		System.out.println("Que souhaitez-vous faire ?");
-		System.out.println("     > Répondre (R)");
+		System.out.println("     > RÃ©pondre (R)");
 		System.out.println("     > Voter (V)");
 		System.out.println("     > Editer (E)");
 		System.out.println("     > Ajouter Tags (T)");
@@ -373,7 +377,7 @@ public class Programme {
 		
 		case "R" : 
 			try {
-				System.out.println("Entrez votre réponse");
+				System.out.println("Entrez votre rÃ©ponse");
 				String reponse = scanner.nextLine();
 				psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
 				psIntroductionNouvelleReponse.setString(2, reponse);
@@ -390,9 +394,9 @@ public class Programme {
 		case "V" :
 			String vote = "P";
 			try{
-				System.out.println("voulez- vous voter positivement (P) ou négativement (N) ? ");
+				System.out.println("voulez- vous voter positivement (P) ou nÃ©gativement (N) ? ");
 				vote = scanner.nextLine();
-				System.out.println("Entrez le numéro de la réponse");
+				System.out.println("Entrez le numÃ©ro de la rÃ©ponse");
 				psVote.setInt(1, this.utilisateur);
 				psVote.setBoolean(2, vote.equals("P"));
 				psVote.setInt(3, map.get((Integer.parseInt(scanner.nextLine()))));
@@ -475,7 +479,7 @@ public class Programme {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Au revoir et à bientôt");
+		System.out.println("Au revoir et Ã  bientÃ´t");
 		System.exit(0);
 	}
 }
