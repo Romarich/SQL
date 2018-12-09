@@ -43,7 +43,7 @@ public class Programme {
 			this.psVisualiserQuestionsPosees = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ?");
 			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT * FROM SOIPL.view_questions_utilisateurs WHERE id_question = ?");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions");
-			this.psVisualiserReponses = connection.prepareStatement("SELECT * FROM SOIPL.view_reponses_utilisateurs WHERE r.id_question = ?");
+			this.psVisualiserReponses = connection.prepareStatement("SELECT * FROM SOIPL.view_reponses_utilisateurs WHERE id_question = ?");
 			//this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
 			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
@@ -322,7 +322,6 @@ public class Programme {
 	}
 	
 	public void voirQuestion(int choixVisualisationQuestionSpecifique) {
-		System.out.println("ici");
 		try {
 			psVisualiserQuestionsPoseesSpecifiqueId.setInt(1, choixVisualisationQuestionSpecifique);
 			ResultSet rs1 = psVisualiserQuestionsPoseesSpecifiqueId.executeQuery();
