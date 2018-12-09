@@ -91,49 +91,6 @@ INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('normal',0);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('avancé',5);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',10);
 
-INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('leekA','$2a$10$uOyYzAH7RPK98eWRLyYKR.ivX0/VA3j26Kyj6CClIjIgeT6/6nCuC','leekA@gmail.com');
-INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email, statut) VALUES ('leekB','$2a$10$BYDnAwC4UzTDH.01jVIVy.vacyBxz9zl3mE54x9CppaAyImwdvBTa','leekB@gmail.com', 'avancé');
-INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('leekC','$2a$10$HrYEp8gtOWyNpxJsBauzy.psAjzaWvJ5oLiImwow5ahV/cXR6sW8.','leekC@gmail.com');
-
-INSERT INTO SOIPL.tags (tag) VALUES ('questions speciales');
-
-INSERT INTO SOIPL.questions (utilisateur_createur, date_creation, texte, titre) VALUES (1, '12/02/2016 10:10:10', 'while x=0 setWeapon();', 'Est-ce que mon code est opti ?');
-
-INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (1,1);
-
-INSERT INTO SOIPL.reponses (id_reponse_par_question,id_question, score, texte, date_heure, id_utilisateur) VALUES (1,1, 20, 'Non il est degueu', '13/02/2016 12:12:12', 2);
-
-INSERT INTO SOIPL.votes (id_utilisateur, positif, date_heure, id_reponse) VALUES (3,true,'13/02/2016 13:13:13',1);
-
-/*DROP TRIGGER changement_dynamique_statut| CREATE TRIGGER changement_dynamique_statut AFTER UPDATE
-ON SOIPL.utilisateurs FOR EACH ROW
--- ici ajouter dans le UPDATE le fait de changer le statut si le seuil de reput est dépassé.
-UPDATE;
-*/
-
--- Verification que la date des reponses est bien ulterieures a la questions.
-CREATE OR REPLACE FUNCTION SOIPL.verif_date_reponses_ulterieures_questions() RETURNS TRIGGER AS $$
-DECLARE 
-	_id_reponse INTEGER;
-BEGIN	
-	SELECT COALESCE(MAX(r.id_reponse),0) FROM SOIPL.reponses r
-	INTO _id_reponse;
-	SELECT COALESCE(r.id_reponse,0) FROM SOIPL.reponses r, SOIPL.questions q WHERE r.id_reponse=_id_reponse AND r.date_heure < q.date_creation
-	INTO _id_reponse;
-	
-	IF _id_reponse <> 0
-	THEN
-		DELETE FROM SOIPL.votes v WHERE _id_reponse = v.id_reponse;
-		DELETE FROM SOIPL.reponses r WHERE _id_reponse = r.id_reponse;
-	END IF;
-	RETURN NULL;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER verification_date_trigger BEFORE INSERT
-ON SOIPL.reponses EXECUTE PROCEDURE SOIPL.verif_date_reponses_ulterieures_questions();
-
--- le fait de pas pouvoir faire redescendre les droits ne fonctionnent pas
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
 _nom_statut VARCHAR(6);
@@ -295,8 +252,13 @@ EXECUTE PROCEDURE SOIPL.vote_pas_deux_fois();
 CREATE OR REPLACE FUNCTION SOIPL.vote_pas_pour_soi_meme() RETURNS TRIGGER AS $$
 DECLARE 
 	_id_vote INTEGER;
+	_id_utilisateur_reponse INTEGER;
+	_id_votant INTEGER;
 BEGIN	
-	IF EXISTS(SELECT * FROM SOIPL.reponses r, SOIPL.votes v WHERE r.id_utilisateur = v.id_utilisateur) 
+	SELECT id_utilisateur FROM SOIPL.reponses WHERE id_reponse = NEW.id_reponse INTO _id_utilisateur_reponse;
+	SELECT id_utilisateur FROM SOIPL.votes WHERE NEW.id_vote = id_vote INTO _id_votant;
+
+	IF _id_utilisateur_reponse = _id_votant
 	THEN 
 		SELECT v.id_vote FROM SOIPL.reponses r, SOIPL.votes v WHERE r.id_utilisateur = v.id_utilisateur INTO _id_vote;
 		RAISE 'Tu ne peux pas voter pour toi même';

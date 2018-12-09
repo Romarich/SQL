@@ -67,7 +67,7 @@ public class Programme {
 		System.out.println("|           Que voulez-vous faire ?          |");
 		System.out.println("----------------------------------------------");
 		System.out.println("|1. Introduire une nouvelle question.        |");
-		System.out.println("|2. Visualiser les questions posées.         |");
+		System.out.println("|2. Visualiser les questions posï¿½es.         |");
 		System.out.println("|3. Visualiser les questions repondues.      |");
 		System.out.println("|4. Visualiser toutes les questions.         |");
 		System.out.println("|5. Visualiser les questions d'un tag.       |");
@@ -128,7 +128,7 @@ public class Programme {
 	                ok = BCrypt.checkpw(password, rs.getString(2));
 	            }
 	            if(!ok) {
-	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a été désactivé");
+	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a ï¿½tï¿½ dï¿½sactivï¿½");
 	            	connexionUtilisateur();
 	            }else {
 	            	menuAvecChoix();
@@ -203,16 +203,17 @@ public class Programme {
 			while (rs.next()) {
                 System.out.println(rs.getString(1) + ". " + rs.getString(7));
                 ids.add(Integer.parseInt(rs.getString(1)));
+            }if(ids.size() > 0) {
+			System.out.println("Quel question souhaitez voir en detail ?");
+			int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
+			voirQuestion(choixVisualisationQuestionSpecifique);
             }
 		}catch(SQLException se) {
 			System.out.println(this.utilisateur);
 			System.out.println(se);
-			System.out.println("Vous n'avez pas encore posé de questions");
+			System.out.println("Vous n'avez pas encore posï¿½ de questions");
 			menuAvecChoix();
 		}
-		System.out.println("Quel question souhaitez voir en detail ?");
-		int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
-		voirQuestion(choixVisualisationQuestionSpecifique);
 		menuAvecChoix();
 	}
 	
@@ -227,7 +228,7 @@ public class Programme {
             }
             rs.close();
         } catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore posé de questions");
+        	System.out.println("Vous n'avez pas encore posï¿½ de questions");
         	e.printStackTrace();
 			menuAvecChoix();
         }
@@ -256,7 +257,7 @@ public class Programme {
         }catch(SQLException se) {
 			System.out.println(se);
 		}catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore répondu Ã  des questions");
+        	System.out.println("Vous n'avez pas encore rï¿½pondu Ã  des questions");
         	e.printStackTrace();
 			menuAvecChoix();
         }
@@ -312,7 +313,7 @@ public class Programme {
             	ok = rs.getBoolean(1);
             }
             if(ok) {
-            	System.out.println("Vous avez été désactivé");
+            	System.out.println("Vous avez ï¿½tï¿½ dï¿½sactivï¿½");
             	connexionUtilisateur();
             }
             rs.close();
@@ -341,11 +342,11 @@ public class Programme {
             }
 		}catch(SQLException se) {
 			System.out.println(se);
-			System.out.println("Cette question spécifique n'existe pas");
+			System.out.println("Cette question spï¿½cifique n'existe pas");
 			toutesLesQuestions();
 		}
 		
-		System.out.println("Réponses Ã  la question :");
+		System.out.println("Rï¿½ponses Ã  la question :");
 		HashMap<Integer,Integer> map = new HashMap<Integer, Integer>(); 
 		try {
 			psVisualiserReponses.setInt(1, choixVisualisationQuestionSpecifique);
@@ -353,9 +354,9 @@ public class Programme {
 			System.out.println("----------------------------------------------");
 			while (rs2.next()) {
 				map.put(rs2.getInt(2), rs2.getInt(1));
-            	System.out.println(rs2.getInt(2) + ". Réponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
+            	System.out.println(rs2.getInt(2) + ". Rï¿½ponse de : " + rs2.getString(8) + " le " + rs2.getString(7));
                 System.out.println("\t" + rs2.getString(6));
-                System.out.println("Score de la réponse : " + rs2.getString(5));
+                System.out.println("Score de la rï¿½ponse : " + rs2.getString(5));
         		System.out.println("----------------------------------------------");
                 System.out.println("");
 			}
@@ -364,7 +365,7 @@ public class Programme {
 		}
 
 		System.out.println("Que souhaitez-vous faire ?");
-		System.out.println("     > Répondre (R)");
+		System.out.println("     > Rï¿½pondre (R)");
 		System.out.println("     > Voter (V)");
 		System.out.println("     > Editer (E)");
 		System.out.println("     > Ajouter Tags (T)");
@@ -376,7 +377,7 @@ public class Programme {
 		
 		case "R" : 
 			try {
-				System.out.println("Entrez votre réponse");
+				System.out.println("Entrez votre rï¿½ponse");
 				String reponse = scanner.nextLine();
 				psIntroductionNouvelleReponse.setInt(1, choixVisualisationQuestionSpecifique);
 				psIntroductionNouvelleReponse.setString(2, reponse);
@@ -393,9 +394,9 @@ public class Programme {
 		case "V" :
 			String vote = "P";
 			try{
-				System.out.println("voulez- vous voter positivement (P) ou négativement (N) ? ");
+				System.out.println("voulez- vous voter positivement (P) ou nï¿½gativement (N) ? ");
 				vote = scanner.nextLine();
-				System.out.println("Entrez le numéro de la réponse");
+				System.out.println("Entrez le numï¿½ro de la rï¿½ponse");
 				psVote.setInt(1, this.utilisateur);
 				psVote.setBoolean(2, vote.equals("P"));
 				psVote.setInt(3, map.get((Integer.parseInt(scanner.nextLine()))));
