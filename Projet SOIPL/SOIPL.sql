@@ -156,7 +156,7 @@ SELECT r.id_utilisateur FROM SOIPL.reponses r WHERE r.id_reponse = NEW.id_repons
 INTO _id_utilisateur;
 SELECT u.reputation FROM SOIPL.utilisateurs u WHERE u.id_utilisateur = _id_utilisateur
 INTO _reputation;
-	IF _reputation<100
+	IF _reputation<100 AND NEW.positif = true
 	THEN
 		_reputation = _reputation+5;
 
@@ -184,8 +184,12 @@ SELECT r.score FROM SOIPL.reponses r WHERE r.id_reponse = NEW.id_reponse
 INTO _score;
 	IF NEW.positif = false
 	THEN
-		_score = _score-1;
-		UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
+		IF _score <> 0
+		THEN
+			_score = _score-1;
+			UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
+		END IF;
+		
 	ELSE
 		_score = _score+1;
 		UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
@@ -284,7 +288,7 @@ BEGIN
 	IF _statut = 'avancé'
 	THEN 
 		SELECT MAX(v.date_heure) FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
-		IF (_date_dernier_vote + interval'24h') < now()
+		IF (_date_dernier_vote + interval '1 day') < now()
 		THEN
 			RAISE 'Vous avez déjà voté trop récemment';
 		END IF;
