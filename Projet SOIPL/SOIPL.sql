@@ -88,8 +88,8 @@ CREATE TABLE SOIPL.votes(
 );
 
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('normal',0);
-INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('avancé',50);
-INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',100);
+INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('avancé',5);
+INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',10);
 
 INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('leekA','$2a$10$uOyYzAH7RPK98eWRLyYKR.ivX0/VA3j26Kyj6CClIjIgeT6/6nCuC','leekA@gmail.com');
 INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email, statut) VALUES ('leekB','$2a$10$BYDnAwC4UzTDH.01jVIVy.vacyBxz9zl3mE54x9CppaAyImwdvBTa','leekB@gmail.com', 'avancé');
@@ -184,7 +184,7 @@ UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
 
 -- liste des autres triggers a faire :
 
-/*CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
 DECLARE 
 	_statut VARCHAR(6);
 BEGIN	
@@ -202,7 +202,7 @@ END;
 $$ LANGUAGE 'plpgsql';
  CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
-*/
+
 -- +5 en cas de vote ++ jamais + 100
 
 CREATE OR REPLACE FUNCTION SOIPL.augmentation_reputation() RETURNS TRIGGER AS $$
@@ -232,6 +232,29 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER statut_maj_trigger AFTER INSERT ON SOIPL.votes FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.augmentation_reputation();
+
+CREATE OR REPLACE FUNCTION SOIPL.augmentation_score_reponses() RETURNS TRIGGER AS $$
+DECLARE
+	_score INTEGER;
+	_positif BOOLEAN;
+BEGIN
+
+SELECT r.score FROM SOIPL.reponses r WHERE r.id_reponse = NEW.id_reponse
+INTO _score;
+	IF NEW.positif = false
+	THEN
+		_score = _score-1;
+		UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
+	ELSE
+		_score = _score+1;
+		UPDATE SOIPL.reponses SET score = _score WHERE id_reponse = NEW.id_reponse;
+	END IF;
+RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER augmentation_score_reponses AFTER INSERT ON SOIPL.votes FOR EACH ROW
+EXECUTE PROCEDURE SOIPL.augmentation_score_reponses();
 
 CREATE OR REPLACE FUNCTION SOIPL.vote_pas_deux_fois() RETURNS TRIGGER AS $$
 DECLARE 
@@ -271,7 +294,7 @@ EXECUTE PROCEDURE SOIPL.vote_pas_pour_soi_meme();
 CREATE OR REPLACE FUNCTION SOIPL.vote_negatif_et_verif_master() RETURNS TRIGGER AS $$
 DECLARE 
 BEGIN	
-	IF EXISTS(SELECT * FROM SOIPL.votes v, SOIPL.utilisateurs u WHERE v.id_vote = NEW.id_vote AND u.id_utilisateur = v.id_utilisateur AND u.statut='master')
+	IF EXISTS(SELECT * FROM SOIPL.votes v, SOIPL.utilisateurs u WHERE v.id_vote = NEW.id_vote AND u.id_utilisateur = v.id_utilisateur AND u.statut <> 'master' AND v.positif = false)
 	THEN 
 		RAISE 'Tu ne peux pas voter negativement car tu n''es pas master';
 		DELETE FROM SOIPL.votes v WHERE v.id_vote = NEW.id_vote;
@@ -584,6 +607,8 @@ GRANT SELECT ON TABLE SOIPL.question_tag TO rhonore16;
 
 GRANT SELECT ON SOIPL.view_toutes_questions_titre TO rhonore16;
 GRANT SELECT ON SOIPL.view_toutes_questions TO rhonore16;
+GRANT SELECT ON SOIPL.view_questions_utilisateurs TO rhonore16;
+GRANT SELECT ON SOIPL.view_reponses_utilisateurs TO rhonore16;
 
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.utilisateurs_id_utilisateur_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
