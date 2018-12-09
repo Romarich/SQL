@@ -392,10 +392,12 @@ public class Programme {
 			break;
 		
 		case "V" :
-			String vote = "P";
+			String vote = "";
 			try{
-				System.out.println("voulez- vous voter positivement (P) ou n�gativement (N) ? ");
-				vote = scanner.nextLine();
+				while(!(("P").equals(vote) || ("N").equals(vote))) {
+					System.out.println("voulez- vous voter positivement (P) ou n�gativement (N) ? ");
+					vote = scanner.nextLine();
+				}
 				System.out.println("Entrez le num�ro de la r�ponse");
 				psVote.setInt(1, this.utilisateur);
 				psVote.setBoolean(2, vote.equals("P"));

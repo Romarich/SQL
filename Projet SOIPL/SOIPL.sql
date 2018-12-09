@@ -93,9 +93,8 @@ INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',10);
 
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
-_nom_statut VARCHAR(6);
-_seuil_avance INTEGER;
-_seuil_master INTEGER;
+	_seuil_avance INTEGER;
+	_seuil_master INTEGER;
 BEGIN
 IF OLD.statut <> 'master' AND OLD.reputation <> NEW.reputation
 THEN
@@ -103,28 +102,13 @@ THEN
 	INTO _seuil_master;
 	SELECT seuil FROM SOIPL.statuts WHERE nom_statut LIKE 'avancé'
 	INTO _seuil_avance;
-	IF NEW.reputation >= _seuil_avance AND NEW.reputation < _seuil_master
+	IF NEW.reputation >= _seuil_avance AND NEW.reputation < _seuil_master AND OLD.statut = 'normal'
 	THEN 
-		_nom_statut = 'avancé';
+		UPDATE SOIPL.utilisateurs SET statut = 'avancé' WHERE id_utilisateur = NEW.id_utilisateur;
 	END IF;
-	IF NEW.reputation = _seuil_master
+	IF NEW.reputation = _seuil_master AND OLD.statut = 'avancé'
 	THEN 
-		_nom_statut = 'master';
-	END IF;
-		
-
-	SELECT COALESCE(s.nom_statut,NULL) FROM SOIPL.statuts s, SOIPL.utilisateurs u
-	WHERE u.id_utilisateur = NEW.id_utilisateur
-	INTO _nom_statut;
-
-	IF NEW.statut <> _nom_statut AND _nom_statut <> 'master'
-	THEN
-		IF _nom_statut = 'avancé' AND NEW.statut = 'master'
-		THEN
-			UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur;
-		ELSE
-			--RAISE 'On ne peut pas diminuer le statut d un utilisateur';
-		END IF;
+		UPDATE SOIPL.utilisateurs SET statut = 'master' WHERE id_utilisateur = NEW.id_utilisateur;
 	END IF;
 END IF;
 RETURN NULL;
@@ -555,6 +539,7 @@ BEGIN
 			WHERE id_question = _question;
 		END IF;
 	ELSE
+
 		RAISE 'Vous ne pouvez pas cloturer une question car vous n''etes pas master';
 	END IF;
 	RETURN 1;
