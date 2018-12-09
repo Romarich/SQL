@@ -111,34 +111,11 @@ ON SOIPL.utilisateurs FOR EACH ROW
 UPDATE;
 */
 
--- Verification que la date des reponses est bien ulterieures a la questions.
-CREATE OR REPLACE FUNCTION SOIPL.verif_date_reponses_ulterieures_questions() RETURNS TRIGGER AS $$
-DECLARE 
-	_id_reponse INTEGER;
-BEGIN	
-	SELECT COALESCE(MAX(r.id_reponse),0) FROM SOIPL.reponses r
-	INTO _id_reponse;
-	SELECT COALESCE(r.id_reponse,0) FROM SOIPL.reponses r, SOIPL.questions q WHERE r.id_reponse=_id_reponse AND r.date_heure < q.date_creation
-	INTO _id_reponse;
-	
-	IF _id_reponse <> 0
-	THEN
-		DELETE FROM SOIPL.votes v WHERE _id_reponse = v.id_reponse;
-		DELETE FROM SOIPL.reponses r WHERE _id_reponse = r.id_reponse;
-	END IF;
-	RETURN NULL;
-END;
-$$ LANGUAGE 'plpgsql';
-
-CREATE TRIGGER verification_date_trigger BEFORE INSERT
-ON SOIPL.reponses EXECUTE PROCEDURE SOIPL.verif_date_reponses_ulterieures_questions();
-
 -- le fait de pas pouvoir faire redescendre les droits ne fonctionnent pas
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
-_nom_statut VARCHAR(6);
-_seuil_avance INTEGER;
-_seuil_master INTEGER;
+	_seuil_avance INTEGER;
+	_seuil_master INTEGER;
 BEGIN
 IF OLD.statut <> 'master' AND OLD.reputation <> NEW.reputation
 THEN
@@ -146,28 +123,13 @@ THEN
 	INTO _seuil_master;
 	SELECT seuil FROM SOIPL.statuts WHERE nom_statut LIKE 'avancé'
 	INTO _seuil_avance;
-	IF NEW.reputation >= _seuil_avance AND NEW.reputation < _seuil_master
+	IF NEW.reputation >= _seuil_avance AND NEW.reputation < _seuil_master AND OLD.statut = 'normal'
 	THEN 
-		_nom_statut = 'avancé';
+		UPDATE SOIPL.utilisateurs SET statut = 'avancé' WHERE id_utilisateur = NEW.id_utilisateur;
 	END IF;
-	IF NEW.reputation = _seuil_master
+	IF NEW.reputation = _seuil_master AND OLD.statut = 'avancé'
 	THEN 
-		_nom_statut = 'master';
-	END IF;
-		
-
-	SELECT COALESCE(s.nom_statut,NULL) FROM SOIPL.statuts s, SOIPL.utilisateurs u
-	WHERE u.id_utilisateur = NEW.id_utilisateur
-	INTO _nom_statut;
-
-	IF NEW.statut <> _nom_statut AND _nom_statut <> 'master'
-	THEN
-		IF _nom_statut = 'avancé' AND NEW.statut = 'master'
-		THEN
-			UPDATE SOIPL.utilisateurs SET statut = _nom_statut WHERE id_utilisateur = NEW.id_utilisateur;
-		ELSE
-			--RAISE 'On ne peut pas diminuer le statut d un utilisateur';
-		END IF;
+		UPDATE SOIPL.utilisateurs SET statut = 'master' WHERE id_utilisateur = NEW.id_utilisateur;
 	END IF;
 END IF;
 RETURN NULL;
@@ -593,6 +555,7 @@ BEGIN
 			WHERE id_question = _question;
 		END IF;
 	ELSE
+
 		RAISE 'Vous ne pouvez pas cloturer une question car vous n''etes pas master';
 	END IF;
 	RETURN 1;
