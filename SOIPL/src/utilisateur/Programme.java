@@ -52,7 +52,7 @@ public class Programme {
 			this.psVote = connection.prepareStatement("SELECT SOIPL.creation_vote(?,?,?)");
 			this.psEditionQuestion = connection.prepareStatement("SELECT SOIPL.edition_question(?,?,?)");
 			this.psEditionTitreQuestion = connection.prepareStatement("SELECT SOIPL.edition_titre_question(?,?,?)");
-			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions_titre WHERE id_utilisateur = ?");
+			this.psVisualiserQuestionsRepondue = connection.prepareStatement("SELECT DISTINCT * FROM SOIPL.view_toutes_questions_titre WHERE id_utilisateur = ?");
 			this.psAjoutTag = connection.prepareStatement("SELECT SOIPL.ajout_tag_question(?,?)");
 			this.psCloturerQuestion = connection.prepareStatement("SELECT SOIPL.cloturer_question(?,?)");
 		} catch (SQLException e) {

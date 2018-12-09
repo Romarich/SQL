@@ -284,7 +284,7 @@ BEGIN
 	IF _statut = 'avancé'
 	THEN 
 		SELECT MAX(v.date_heure) FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
-		IF (_date_dernier_vote + interval'24h') < now()
+		IF (_date_dernier_vote + interval '1 day') < now()
 		THEN
 			RAISE 'Vous avez déjà voté trop récemment';
 		END IF;

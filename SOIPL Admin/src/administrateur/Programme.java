@@ -28,7 +28,7 @@ public class Programme {
 			this.psDesactiverCompte = connection.prepareStatement("SELECT SOIPL.desactivation_compte_utilisateur(?)");
 			this.psHistoriqueQuestions = connection.prepareStatement("SELECT * FROM SOIPL.questions WHERE utilisateur_createur = ? AND date_creation >= ? AND date_creation <= ?");
 			this.psHistoriqueReponses = connection.prepareStatement("SELECT * FROM SOIPL.responses WHERE id_utilisateur = ? AND date_heure >= ? AND date_heure <= ?");
-			this.psListeUtilisateurs = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs");
+			this.psListeUtilisateurs = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs ORDER BY id_utilisateur");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
