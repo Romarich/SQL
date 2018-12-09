@@ -283,8 +283,8 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER vote_negatif_et_verif_master AFTER INSERT ON SOIPL.votes FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.vote_negatif_et_verif_master();
 
-/*CREATE OR REPLACE FUNCTION SOIPL.peut_voter() RETURNS TRIGGER AS $$
-DECLARE 
+CREATE OR REPLACE FUNCTION SOIPL.peut_voter() RETURNS TRIGGER AS $$
+DECLARE
 	_id_util INTEGER;
 	_statut VARCHAR(6);
 	_date_dernier_vote TIMESTAMP;
@@ -296,7 +296,7 @@ BEGIN
 	IF _statut = 'avancé'
 	THEN 
 		SELECT MAX(v.date_heure) FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
-		SELECT DATEDIFF(DAY,_date_dernier_vote, CURRENT_TIMESTAMP) INTO _diff;
+		--SELECT age(to_timestamp(substring(to_char(date_trunc('day',_date_dernier_vote), 'YYYY-MM-DD') from 1 for 10),'YYYY-MM-DD'),CURRENT_DATE) FROM SOIPL.votes INTO _diff;
 	END IF;
 
 	IF _statut = 'normal' 
@@ -308,7 +308,7 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 CREATE TRIGGER peut_voter AFTER INSERT ON SOIPL.votes FOR EACH ROW 
-EXECUTE PROCEDURE SOIPL.peut_voter();*/
+EXECUTE PROCEDURE SOIPL.peut_voter();
 
 -- liste des autres triggers a faire :
 /*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
