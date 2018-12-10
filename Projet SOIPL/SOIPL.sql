@@ -279,16 +279,15 @@ CREATE OR REPLACE FUNCTION SOIPL.peut_voter() RETURNS TRIGGER AS $$
 DECLARE
 	_id_util INTEGER;
 	_statut VARCHAR(6);
-	_date_dernier_vote TIMESTAMP;
-	_diff INTEGER;
+	_count_vote INTEGER;
 BEGIN	
 	SELECT v.id_utilisateur FROM SOIPL.votes v WHERE v.id_vote = NEW.id_vote INTO _id_util;
 	SELECT u.statut FROM SOIPL.utilisateurs u WHERE u.id_utilisateur = _id_util INTO _statut;
 
 	IF _statut = 'avancé'
 	THEN 
-		SELECT COALESCE(MAX(v.date_heure),'2000-01-01T00:00:00') FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
-		IF age(_date_dernier_vote,now()) < '24 hours'
+		SELECT COUNT(*) FROM SOIPL.votes WHERE id_utilisateur = NEW.id_utilisateur AND date_heure > now() - interval '24 hours' INTO _count_vote;
+		IF _count_vote > 1
 		THEN
 			RAISE 'Vous avez déjà voté trop récemment';
 		END IF;
