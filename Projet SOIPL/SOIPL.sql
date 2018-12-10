@@ -1,31 +1,8 @@
-﻿--TODO : GRANT DONE
---TODO : TRIGGER 
-
---TODO : APPLICATION UTILISATEUR
--- ╔ FAIT :: vérifier si utilisateur non désactivé à la connexion (trigger) --pense paas finalement
--- ╠ FAIT :: ajout tag questions (insert) nam 
--- ╠ selection questions posées ou répondues (query) nam ┐
--- ╠ FAIT :: selection toutes les questions (query) nam  ├ afficher date, num, utilisateur, date edit, util edit, titre
--- ╠ selection question liée à un tag (query)  nam       ┘
--- ╠ FAIT :: selection d'une question parmi celles affichées (par num ?) + affichage réponses triées (num date auteur score contenu) nam
--- ╠══╦ FAIT :: répondre (max 200 char) nam
--- ║  ╠ FAIT/2 :: voter am (24h pour a, illimité pour m)
--- ║  ╠ FAIT :: editer question ou reponse am
--- ║  ╠ ajout tag am 
--- ╠══╩ FAIT :: cloturer question m 
--- ╚ FAIT :: reputation augmente → possible changement statut 
-
---TODO : APPLICATION CENTRALE 
--- ╔ FAIT :: desactiver compte (enlever connexion)
--- ╠ FAIT/2 :: augmentation forcée de statut
--- ╠ FAIT :: consulter historique utilisateur
--- ╚ FAIT :: ajouter tag
-
-DROP SCHEMA IF EXISTS SOIPL CASCADE;
+﻿DROP SCHEMA IF EXISTS SOIPL CASCADE;
 
 CREATE SCHEMA SOIPL;
 
--- est-ce que ça doit etre le plus opti possible ou alors on peut metre un id pour ici la table status meme s’il y a 3 donnees
+/*CREATION DES TABLES*/
 CREATE TABLE SOIPL.statuts(
 	nom_statut VARCHAR(6) CHECK (nom_statut LIKE 'normal' OR nom_statut LIKE 'avancé' OR nom_statut LIKE 'master') PRIMARY KEY,
 	seuil INTEGER NOT NULL CHECK (seuil>=0 AND seuil<=100) UNIQUE
@@ -46,10 +23,6 @@ CREATE TABLE SOIPL.utilisateurs(
 	desactive BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- quand une question est créée utilisateur créateur est celui qui a crée la question et l'utilisateur edition est mis a null a la création
--- !!!!!! Coherence si utilisateur_edition est à NULL à la creation alors la date_derniere_edition aussi !!!!!!
-
--- peut on mettre des default NULL ??? ::FAIT -- est-ce qu'une valeur de base est null ? oui
 CREATE TABLE SOIPL.questions(
 	id_question SERIAL PRIMARY KEY,
 	utilisateur_createur INTEGER REFERENCES SOIPL.utilisateurs(id_utilisateur) NOT NULL, 
@@ -65,19 +38,16 @@ CREATE TABLE SOIPL.question_tag(
 	id_question INTEGER REFERENCES SOIPL.questions(id_question),
 	id_tag INTEGER REFERENCES SOIPL.tags(id_tag)
 );
--- faire un trigger date_heure > questions.date_creation FAIT
--- doit etre fait par un utilisateur aussi :: FAIT
+
 CREATE TABLE SOIPL.reponses(
 	id_reponse SERIAL PRIMARY KEY,
-	id_reponse_par_question INTEGER NOT NULL, -- qd on change de question on passe a 1.
+	id_reponse_par_question INTEGER NOT NULL,
 	id_question INTEGER REFERENCES SOIPL.questions(id_question) NOT NULL,
 	id_utilisateur INTEGER REFERENCES SOIPL.utilisateurs(id_utilisateur) NOT NULL,
 	score INTEGER NOT NULL DEFAULT 0,
 	texte VARCHAR(200) NOT NULL CHECK(texte<>''),
 	date_heure TIMESTAMP NOT NULL CHECK(date_heure <= CURRENT_TIMESTAMP)
 );
-
--- un vote doit se reporter a une question : Rajouter question :: FAIT
 
 CREATE TABLE SOIPL.votes(
 	id_vote SERIAL PRIMARY KEY,
@@ -87,10 +57,16 @@ CREATE TABLE SOIPL.votes(
 	id_reponse INTEGER REFERENCES SOIPL.reponses(id_reponse) NOT NULL
 );
 
+/*INSERTS*/
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('normal',0);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('avancé',5);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',10);
 
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('Damas','$2a$10$uOyYzAH7RPK98eWRLyYKR.ivX0/VA3j26Kyj6CClIjIgeT6/6nCuC','damas@vinci.be');
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('Grolaux','$2a$10$BYDnAwC4UzTDH.01jVIVy.vacyBxz9zl3mE54x9CppaAyImwdvBTa','grolaux@vinci.be');
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('Ferneeuw','$2a$10$HrYEp8gtOWyNpxJsBauzy.psAjzaWvJ5oLiImwow5ahV/cXR6sW8.','ferneeuw@vinci.be');
+
+/*TRIGGERS*/
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
 	_seuil_avance INTEGER;
@@ -115,15 +91,8 @@ RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
-
---DROP TRIGGER statut_maj_trigger ON SOIPL.utilisateurs; A retirer apres
 CREATE TRIGGER statut_maj_trigger AFTER UPDATE ON SOIPL.utilisateurs FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.statut_maj();
-/*
-UPDATE SOIPL.utilisateurs SET reputation = 60 WHERE id_utilisateur = 2;
-*/
-
--- liste des autres triggers a faire :
 
 CREATE OR REPLACE FUNCTION SOIPL.verif_pas_diminution_statut() RETURNS TRIGGER AS $$
 DECLARE 
@@ -143,8 +112,6 @@ END;
 $$ LANGUAGE 'plpgsql';
  CREATE TRIGGER verification_statut_diminution_pas_poss BEFORE UPDATE ON SOIPL.utilisateurs FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.verif_pas_diminution_statut();
-
--- +5 en cas de vote ++ jamais + 100
 
 CREATE OR REPLACE FUNCTION SOIPL.augmentation_reputation() RETURNS TRIGGER AS $$
 DECLARE
@@ -219,7 +186,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER util_normal_peut_pas_editer AFTER UPDATE ON SOIPL.questions FOR EACH ROW
 EXECUTE PROCEDURE SOIPL.util_normal_peut_pas_editer();
 
-
 CREATE OR REPLACE FUNCTION SOIPL.vote_pas_deux_fois() RETURNS TRIGGER AS $$
 DECLARE 
 	_nb_vote_une_personne INTEGER;
@@ -259,7 +225,6 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER verification_vote_pas_pour_soi_meme AFTER INSERT ON SOIPL.votes FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.vote_pas_pour_soi_meme();
 
-
 CREATE OR REPLACE FUNCTION SOIPL.vote_negatif_et_verif_master() RETURNS TRIGGER AS $$
 DECLARE 
 BEGIN	
@@ -279,27 +244,23 @@ CREATE OR REPLACE FUNCTION SOIPL.peut_voter() RETURNS TRIGGER AS $$
 DECLARE
 	_id_util INTEGER;
 	_statut VARCHAR(6);
-	_date_dernier_vote TIMESTAMP;
-	_diff INTEGER;
+	_count_vote INTEGER;
 BEGIN	
 	SELECT v.id_utilisateur FROM SOIPL.votes v WHERE v.id_vote = NEW.id_vote INTO _id_util;
 	SELECT u.statut FROM SOIPL.utilisateurs u WHERE u.id_utilisateur = _id_util INTO _statut;
 
 	IF _statut = 'avancé'
 	THEN 
-		IF EXISTS(SELECT * FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util)
-		THEN 
-			SELECT v.date_heure FROM SOIPL.votes v WHERE v.id_vote = (SELECT MAX(vv.id_vote) FROM SOIPL.votes vv WHERE vv.id_utilisateur = _id_util) INTO _date_dernier_vote;
-			IF DATE_PART('day',_date_dernier_vote - now()) < 1
-			THEN
-				RAISE 'Vous avez déjà voté trop récemment % , %', _date_dernier_vote, DATE_PART('day',_date_dernier_vote - now());
-			END IF;
+		SELECT COUNT(*) FROM SOIPL.votes WHERE id_utilisateur = NEW.id_utilisateur AND date_heure > now() - interval '24 hours' INTO _count_vote;
+		IF _count_vote > 1
+		THEN
+			RAISE 'Vous avez déjà voté trop récemment';
 		END IF;
 	END IF;
 
 	IF _statut = 'normal' 
 	THEN
-		RAISE 'Tu ne peux pas voter car tu n as pas un grade assez haut';
+		RAISE 'Tu ne peux pas voter car tu n''as pas un grade assez haut';
 	END IF;
 	RETURN NULL;
 END;
@@ -308,23 +269,7 @@ $$ LANGUAGE 'plpgsql';
 CREATE TRIGGER peut_voter BEFORE INSERT ON SOIPL.votes FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.peut_voter();
 
-
--- liste des autres triggers a faire :
-/*FAIRE LES TRIGGER POUR VERIFIER QUE L UTILISATEUR EST PAS DESACTIVE*/
-/*FAIRE LES TRIGGER POUR BLOQUER LA REPUTATION A 100*/
-/* +5 POINT QUAND ON VOTE*/
-
--- liste procedure a faire :
-/*
-	inscription login
-	verification pour l'authentification
-	insertion de question
-	insertion de reponse
-	affichage question par tag
-	afficahge toutes les questions
-	affichage par util.
-*/
-
+/*CONNEXION VERIFICATION*/
 CREATE OR REPLACE FUNCTION SOIPL.verification_login(VARCHAR,VARCHAR) RETURNS INTEGER AS $$
 DECLARE 
 	reussi INTEGER;
@@ -339,7 +284,6 @@ END;
 $$ LANGUAGE 'plpgsql';
 
 /*LES AJOUTS*/
--- email puis login puis mdp
 CREATE OR REPLACE FUNCTION SOIPL.inscription_utilisateur(VARCHAR(100),VARCHAR(100),VARCHAR(100)) RETURNS INTEGER AS $$
 DECLARE 
 	_email ALIAS FOR $1;
@@ -351,9 +295,6 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*EXEC SOIPL.inscription_utilisateur('test@test.com','login','password');*/
--- regarder comment executer une procedure
-
 CREATE OR REPLACE FUNCTION SOIPL.creation_nouvelle_question(INTEGER,VARCHAR,VARCHAR) RETURNS INTEGER AS $$
 DECLARE
 	_utilisateur_createur ALIAS FOR $1;
@@ -364,8 +305,6 @@ BEGIN
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
-
-
 
 CREATE OR REPLACE FUNCTION SOIPL.ajout_tag_question(VARCHAR,INTEGER) RETURNS INTEGER AS $$
 DECLARE
@@ -380,13 +319,11 @@ BEGIN
 		SELECT id_tag FROM SOIPL.tags WHERE _tag = tag INTO _id_tag;
 		INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (_question,_id_tag);
 	ELSE
-		RAISE 'Erreur dans l ajout';
+		RAISE 'Vous ne pouvez plus rajouter de tags car le nombre maximum a été atteint';
 	END IF;
 	RETURN 1;
 END;
 $$ LANGUAGE 'plpgsql';
-
-
 
 CREATE OR REPLACE FUNCTION SOIPL.creation_vote (INTEGER,BOOLEAN,INTEGER) RETURNS INTEGER AS $$
 DECLARE
@@ -413,13 +350,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-
-
 /*LES VUES*/
---CREATE OF REPLACE FUNCTION affichage_toutes_questions RETURNS INTEGER AS $$
--- voir comment return une liste
--- ou alors faite un return view ?? ou return records
-
 CREATE OR REPLACE VIEW SOIPL.view_toutes_questions_titre AS
 	SELECT  q.titre,
 		q.date_creation,
@@ -487,16 +418,7 @@ CREATE OR REPLACE VIEW SOIPL.view_questions_tags AS
 	WHERE q.id_question = t.id_question
 	ORDER BY q.date_creation;
 
---CREATE OR REPLACE VIEW SOIPL.selection_questions_posees_par_utilisateur(@id_utilisateur INT) AS
---SELECT titre, utilisateur_createur, date_creation, utilisateur_edition, date_derniere_edition FROM SOIPL.questions WHERE @id_utilisateur = utilisateur_createur AND cloture = false ORDER BY date_creation;
-
---CREATE OR REPLACE VIEW SOIPL.selection_reponses_sur_questions_posees(@id_question_selectionnee INT) AS
---SELECT id_reponse_par_question, id_utilisateur, score, texte, date_heure FROM SOIPL.reponses WHERE id_question = @id_question_selectionnee ORDER BY date_heure; -- date_heure ou alors par id_reponse_par_question
-
 /*LES MODIFICATIONS*/
-
--- a faire des raises.
--- attention il ne faut pas de IF dans les procedures simple !! ==> il faut mettre dans des triggers
 CREATE OR REPLACE FUNCTION SOIPL.edition_question (VARCHAR,INTEGER, INTEGER) RETURNS INTEGER AS $$
 DECLARE
 	_texte ALIAS FOR $1;
@@ -554,7 +476,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*SELECTIONS DIVERSES*/
+/*SELECTION DIVERSE*/
 CREATE OR REPLACE FUNCTION SOIPL.selection_id_utilisateur_avec_nom_utilisateur (VARCHAR) RETURNS INTEGER AS $$
 DECLARE
 	_nom_utilisateur ALIAS FOR $1;
@@ -595,16 +517,17 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*
+/*LES GRANTS*/
 GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
 GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
 
-GRANT SELECT, INSERT ON TABLE SOIPL.utilisateurs TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.utilisateurs TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.questions TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;
 GRANT SELECT ON TABLE SOIPL.tags TO rhonore16;
-GRANT SELECT ON TABLE SOIPL.question_tag TO rhonore16;
+GRANT SELECT ON TABLE SOIPL.statuts TO rhonore16;
+GRANT SELECT, INSERT ON TABLE SOIPL.question_tag TO rhonore16;
 
 GRANT SELECT ON SOIPL.view_toutes_questions_titre TO rhonore16;
 GRANT SELECT ON SOIPL.view_toutes_questions TO rhonore16;
@@ -617,4 +540,4 @@ GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.reponses_id_reponse_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.questions_id_question_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.tags_id_tag_seq TO rhonore16;
-*/
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.question_tag_id_ligne_question_tag_seq TO rhonore16;
