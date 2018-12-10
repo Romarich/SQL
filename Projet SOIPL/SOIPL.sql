@@ -91,6 +91,11 @@ INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('normal',0);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('avancé',5);
 INSERT INTO SOIPL.statuts (nom_statut, seuil) VALUES ('master',10);
 
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('Damas','$2a$10$uOyYzAH7RPK98eWRLyYKR.ivX0/VA3j26Kyj6CClIjIgeT6/6nCuC','leekA@gmail.com');
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('Grolaux','$2a$10$BYDnAwC4UzTDH.01jVIVy.vacyBxz9zl3mE54x9CppaAyImwdvBTa','leekB@gmail.com');
+INSERT INTO SOIPL.utilisateurs (nom_utilisateur, mot_de_passe, email) VALUES ('Ferneeuw','$2a$10$HrYEp8gtOWyNpxJsBauzy.psAjzaWvJ5oLiImwow5ahV/cXR6sW8.','leekC@gmail.com');
+
+
 CREATE OR REPLACE FUNCTION SOIPL.statut_maj() RETURNS TRIGGER AS $$
 DECLARE
 	_seuil_avance INTEGER;
@@ -591,16 +596,16 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-/*
 GRANT CONNECT ON DATABASE dblbokiau17 to rhonore16;
 GRANT USAGE ON SCHEMA SOIPL TO rhonore16;
 
-GRANT SELECT, INSERT ON TABLE SOIPL.utilisateurs TO rhonore16;
+GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.utilisateurs TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.questions TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.reponses TO rhonore16;
 GRANT SELECT, INSERT, UPDATE ON TABLE SOIPL.votes TO rhonore16;
 GRANT SELECT ON TABLE SOIPL.tags TO rhonore16;
-GRANT SELECT ON TABLE SOIPL.question_tag TO rhonore16;
+GRANT SELECT ON TABLE SOIPL.statuts TO rhonore16;
+GRANT SELECT, INSERT ON TABLE SOIPL.question_tag TO rhonore16;
 
 GRANT SELECT ON SOIPL.view_toutes_questions_titre TO rhonore16;
 GRANT SELECT ON SOIPL.view_toutes_questions TO rhonore16;
@@ -613,4 +618,4 @@ GRANT USAGE, SELECT ON SEQUENCE SOIPL.votes_id_vote_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.reponses_id_reponse_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.questions_id_question_seq TO rhonore16;
 GRANT USAGE, SELECT ON SEQUENCE SOIPL.tags_id_tag_seq TO rhonore16;
-*/
+GRANT USAGE, SELECT ON SEQUENCE SOIPL.question_tag_id_ligne_question_tag_seq TO rhonore16;
