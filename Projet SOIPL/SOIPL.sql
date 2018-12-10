@@ -260,7 +260,7 @@ BEGIN
 
 	IF _statut = 'normal' 
 	THEN
-		RAISE 'Tu ne peux pas voter car tu n as pas un grade assez haut';
+		RAISE 'Tu ne peux pas voter car tu n''as pas un grade assez haut';
 	END IF;
 	RETURN NULL;
 END;
@@ -319,7 +319,7 @@ BEGIN
 		SELECT id_tag FROM SOIPL.tags WHERE _tag = tag INTO _id_tag;
 		INSERT INTO SOIPL.question_tag (id_question, id_tag) VALUES (_question,_id_tag);
 	ELSE
-		RAISE 'Erreur dans l ajout';
+		RAISE 'Vous ne pouvez plus rajouter de tags car le nombre maximum a été atteint';
 	END IF;
 	RETURN 1;
 END;
