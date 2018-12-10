@@ -21,7 +21,6 @@ public class Programme {
 	private PreparedStatement psVisualiserQuestionsPoseesSpecifiqueId;
 	private PreparedStatement psVisualiserToutesLesQuestions;
 	private PreparedStatement psVisualiserReponses;
-	//private PreparedStatement psVisualiserInformationsUtilisateur;
 	private PreparedStatement psIntroductionNouvelleReponse;
 	private PreparedStatement psUtilisateurPasDesactive;
 	private PreparedStatement psSelectionDeTousLesTags;
@@ -44,7 +43,6 @@ public class Programme {
 			this.psVisualiserQuestionsPoseesSpecifiqueId = connection.prepareStatement("SELECT * FROM SOIPL.view_questions_utilisateurs WHERE id_question = ?");
 			this.psVisualiserToutesLesQuestions = connection.prepareStatement("SELECT * FROM SOIPL.view_toutes_questions");
 			this.psVisualiserReponses = connection.prepareStatement("SELECT * FROM SOIPL.view_reponses_utilisateurs WHERE id_question = ?");
-			//this.psVisualiserInformationsUtilisateur = connection.prepareStatement("SELECT * FROM SOIPL.utilisateurs WHERE id_utilisateur  = ?");
 			this.psIntroductionNouvelleReponse = connection.prepareStatement("SELECT SOIPL.creation_reponse(?,?,?)");
 			this.psUtilisateurPasDesactive = connection.prepareStatement("SELECT desactive FROM SOIPL.utilisateurs WHERE id_utilisateur =?");
 			this.psSelectionDeTousLesTags = connection.prepareStatement("SELECT * FROM SOIPL.tags");
@@ -128,7 +126,7 @@ public class Programme {
 	                ok = BCrypt.checkpw(password, rs.getString(2));
 	            }
 	            if(!ok) {
-	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a �t� d�sactiv�");
+	            	System.out.println("Identifiant, Mot de passe incorrect ou l'utilisateur a été désactivé");
 	            	connexionUtilisateur();
 	            }else {
 	            	menuAvecChoix();
@@ -203,15 +201,16 @@ public class Programme {
 			while (rs.next()) {
                 System.out.println(rs.getString(1) + ". " + rs.getString(7));
                 ids.add(Integer.parseInt(rs.getString(1)));
-            }if(ids.size() > 0) {
-			System.out.println("Quel question souhaitez voir en detail ?");
-			int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
-			voirQuestion(choixVisualisationQuestionSpecifique);
+            }
+			if(ids.size() > 0) {
+				System.out.println("Quel question souhaitez voir en detail ?");
+				int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
+				voirQuestion(choixVisualisationQuestionSpecifique);
             }
 		}catch(SQLException se) {
 			System.out.println(this.utilisateur);
 			System.out.println(se);
-			System.out.println("Vous n'avez pas encore pos� de questions");
+			System.out.println("Vous n'avez pas encore posé de questions");
 			menuAvecChoix();
 		}
 		menuAvecChoix();
@@ -227,19 +226,17 @@ public class Programme {
                 ids.add(Integer.parseInt(rs.getString(1)));
             }
             rs.close();
+			if(ids.size() > 0) {
+				System.out.println("Quel question souhaitez voir en detail ?");
+				int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
+				voirQuestion(choixVisualisationQuestionSpecifique);
+            }
         } catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore pos� de questions");
+        	System.out.println("Vous n'avez pas encore posé de questions");
         	e.printStackTrace();
 			menuAvecChoix();
         }
 		System.out.println("");
-		int choixVisualisationQuestionSpecifique;
-
-		do {
-			System.out.println("Quel question souhaitez voir en detail ?");
-			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
-		}while(!ids.contains(choixVisualisationQuestionSpecifique));
-		voirQuestion(choixVisualisationQuestionSpecifique);
 		menuAvecChoix();
 	}
 	
@@ -254,19 +251,18 @@ public class Programme {
                 ids.add(Integer.parseInt(rs.getString(3)));
             }
             rs.close();
+			if(ids.size() > 0) {
+				System.out.println("Quel question souhaitez voir en detail ?");
+				int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
+				voirQuestion(choixVisualisationQuestionSpecifique);
+            }
         }catch(SQLException se) {
 			System.out.println(se);
 		}catch (Exception e) {
-        	System.out.println("Vous n'avez pas encore r�pondu à des questions");
+        	System.out.println("Vous n'avez pas encore répondu à des questions");
         	e.printStackTrace();
 			menuAvecChoix();
         }
-		int choixVisualisationQuestionSpecifique;
-		do {
-			System.out.println("Quel question souhaitez voir en detail ?");
-			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
-		}while(!ids.contains(choixVisualisationQuestionSpecifique));
-		voirQuestion(choixVisualisationQuestionSpecifique);
 		menuAvecChoix();
 	}
 	
@@ -291,16 +287,15 @@ public class Programme {
                 System.out.println(rs.getString(1) + ". " + rs.getString(7));
                 ids.add(Integer.parseInt(rs.getString(1)));
             }
+			if(ids.size() > 0) {
+				System.out.println("Quel question souhaitez voir en detail ?");
+				int choixVisualisationQuestionSpecifique= Integer.parseInt(scanner.nextLine());
+				voirQuestion(choixVisualisationQuestionSpecifique);
+            }
             rs.close();
 		}catch(SQLException se) {
 			se.printStackTrace();
 		}
-		int choixVisualisationQuestionSpecifique;
-		do {
-			System.out.println("Quel question souhaitez voir en detail ?");
-			choixVisualisationQuestionSpecifique = Integer.parseInt(scanner.nextLine());
-		}while(!ids.contains(choixVisualisationQuestionSpecifique));
-		voirQuestion(choixVisualisationQuestionSpecifique);
 		menuAvecChoix();
 	}
 	
@@ -313,7 +308,7 @@ public class Programme {
             	ok = rs.getBoolean(1);
             }
             if(ok) {
-            	System.out.println("Vous avez �t� d�sactiv�");
+            	System.out.println("Vous avez été désactivé");
             	connexionUtilisateur();
             }
             rs.close();
@@ -395,14 +390,16 @@ public class Programme {
 			String vote = "";
 			try{
 				while(!(("P").equals(vote) || ("N").equals(vote))) {
-					System.out.println("voulez- vous voter positivement (P) ou n�gativement (N) ? ");
+					System.out.println("voulez- vous voter positivement (P) ou négativement (N) ? ");
 					vote = scanner.nextLine();
 				}
-				System.out.println("Entrez le num�ro de la r�ponse");
+				System.out.println("Entrez le numéro de la réponse");
 				psVote.setInt(1, this.utilisateur);
 				psVote.setBoolean(2, vote.equals("P"));
 				psVote.setInt(3, map.get((Integer.parseInt(scanner.nextLine()))));
 				psVote.executeQuery();
+				
+				
 			}catch(SQLException se) {
 				System.out.println(se);
 			}
@@ -474,10 +471,16 @@ public class Programme {
 			psVisualiserQuestionsPoseesSpecifiqueId.close();
 			psVisualiserToutesLesQuestions.close();
 			psVisualiserReponses.close();
+			psIntroductionNouvelleReponse.close();
+			psUtilisateurPasDesactive.close();
+			psSelectionDeTousLesTags.close();
+			psSelectionQuestionParTag.close();
 			psVote.close();
 			psEditionQuestion.close();
 			psEditionTitreQuestion.close();
 			psAjoutTag.close();
+			psVisualiserQuestionsRepondue.close();
+			psCloturerQuestion.close();
 			scanner.close();
 		} catch (SQLException e) {
 			e.printStackTrace();

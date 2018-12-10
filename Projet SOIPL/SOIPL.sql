@@ -287,10 +287,13 @@ BEGIN
 
 	IF _statut = 'avancé'
 	THEN 
-		SELECT COALESCE(MAX(v.date_heure),'2000-01-01T00:00:00') FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util INTO _date_dernier_vote;
-		IF age(_date_dernier_vote,now()) < '24 hours'
-		THEN
-			RAISE 'Vous avez déjà voté trop récemment';
+		IF EXISTS(SELECT * FROM SOIPL.votes v WHERE v.id_utilisateur = _id_util)
+		THEN 
+			SELECT v.date_heure FROM SOIPL.votes v WHERE v.id_vote = (SELECT MAX(vv.id_vote) FROM SOIPL.votes vv WHERE vv.id_utilisateur = _id_util) INTO _date_dernier_vote;
+			IF DATE_PART('day',_date_dernier_vote - now()) < 1
+			THEN
+				RAISE 'Vous avez déjà voté trop récemment % , %', _date_dernier_vote, DATE_PART('day',_date_dernier_vote - now());
+			END IF;
 		END IF;
 	END IF;
 
@@ -302,7 +305,7 @@ BEGIN
 END;
 $$ LANGUAGE 'plpgsql';
 
-CREATE TRIGGER peut_voter AFTER INSERT ON SOIPL.votes FOR EACH ROW 
+CREATE TRIGGER peut_voter BEFORE INSERT ON SOIPL.votes FOR EACH ROW 
 EXECUTE PROCEDURE SOIPL.peut_voter();
 
 
